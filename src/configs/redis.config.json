@@ -1,0 +1,8 @@
+{
+  "host": "localhost",
+  "port": 6379,
+  "password": "",
+  "taskExpireTime": 30,
+  "userExpireTime": 30,
+  "otherExpireTime": 30
+}

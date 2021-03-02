@@ -1,0 +1,7 @@
+{
+  "port": 8120,
+  "globalPrefix": "",
+  "isHttps": false,
+  "sslKey": "",
+  "sslCert": ""
+}

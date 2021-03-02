@@ -1,0 +1,18 @@
+{
+  "type": "mysql",
+  "host": "us-cdbr-east-03.cleardb.com",
+  "port": 3306,
+  "username": "b70e5409fe3276",
+  "password": "24b43524",
+  "database": "heroku_bfed9b04e1fa92d",
+  "synchronize": true,
+  "logging": false,
+  "options": {
+    "encrypt": false,
+    "enableArithAbort": true
+  },
+  "pool": {
+    "max": 200,
+    "min": 10
+  }
+}

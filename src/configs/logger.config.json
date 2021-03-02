@@ -1,0 +1,7 @@
+{
+  "protocol": "http",
+  "host": "localhost",
+  "port": "8124",
+  "prefix": "/api/v1",
+  "logTemplate": "{instanceName} | {startTime} | \"{message}\" ({executeTime}ms) input:[{input}] output:[{output}]"
+}
