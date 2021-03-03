@@ -3,7 +3,7 @@ import * as path from 'path';
 import { from } from 'rxjs';
 import { mergeMap, toArray } from 'rxjs/operators';
 import { Cookie } from 'src/entity';
-import { LogStatus, UploadFile } from 'src/models';
+import { ConfigType, LogStatus, ServerConfig, UploadFile } from 'src/models';
 import { cookieStatus } from 'src/models/cookie';
 import { CommonService } from '../common.service';
 import { DatabaseService } from '../database.service';
@@ -12,10 +12,16 @@ import { v4 as uuid } from 'uuid';
 import { Thankyou } from 'src/entity/Thankyou';
 import { query } from 'express';
 import { IsolationLevel, LockMode } from 'src/plugins';
+import { ConfigService } from 'src/core/config/config.service';
 
 @Injectable()
 export class ClientService {
+  get serverConfig(): ServerConfig {
+    return this.configService.get<ServerConfig>(ConfigType.Server);
+  }
+
   constructor(
+    private configService: ConfigService,
     private databaseService: DatabaseService,
     private commonService: CommonService,
     private loggerService: LoggerService,
@@ -49,34 +55,50 @@ export class ClientService {
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  async uploadZip(files: UploadFile[]): Promise<any> {
+  async uploadZip(
+    files: UploadFile[],
+    version?: string,
+  ): Promise<{ fileName: string; url: string }[] | string> {
     if (!Array.isArray(files) || files.length < 1) {
       this.loggerService.setLog(LogStatus.Error, 'uploadZip失敗: 未上傳檔案');
-      return false;
+      return 'false';
     }
 
-    const isSuccess = await from(files)
+    const protocol = this.serverConfig.protocol;
+    const host = this.serverConfig.host;
+    const port = this.serverConfig.port;
+
+    return from(files)
       .pipe(
         mergeMap(async file => {
           try {
-            await this.commonService.saveFile({ file, folderName: 'download' });
-            return true;
+            const { fileName } = await this.commonService.saveFile({
+              file,
+              folderName: 'download',
+            });
+
+            await new Thankyou({
+              thankyouId: uuid(),
+              version,
+              fileName,
+              count: 0,
+              status: 0,
+            }).save();
+
+            return {
+              fileName,
+              url: `${protocol}://${host}:${port}/client/download/${fileName}`,
+            };
           } catch (error) {
             this.loggerService.setLog(LogStatus.Error, 'uploadZip失敗', {
               Output: error,
             });
-            return false;
+            return;
           }
         }),
         toArray(),
       )
       .toPromise();
-
-    if (isSuccess.some(item => !item)) {
-      return false;
-    }
-
-    return true;
   }
 
   /** 更新thankyou */

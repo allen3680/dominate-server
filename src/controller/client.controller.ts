@@ -23,14 +23,19 @@ export class ClientController {
     @Param('fileName') fileName: string,
     @Response() res: any,
   ): Promise<any> {
+    console.log('downloadThankyou');
     return this.clientService.download(fileName, res);
   }
 
   @Post('upload/zip')
   @UseInterceptors(AnyFilesInterceptor())
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  async uploadZip(@UploadedFiles() files: UploadFile[]): Promise<any> {
-    return this.clientService.uploadZip(files);
+  async uploadZip(
+    @UploadedFiles() files: UploadFile[],
+    @Body() body: { version?: string },
+  ): Promise<any> {
+    console.log('uploadZip');
+    return this.clientService.uploadZip(files, body.version);
   }
 
   @Get('update')
@@ -43,6 +48,8 @@ export class ClientController {
     },
     @Response() res: any,
   ): Promise<any> {
+    console.log('update');
+
     return this.clientService.update({ ...req, res });
   }
 

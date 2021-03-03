@@ -1,14 +1,14 @@
 module.exports = {
   apps: [
     {
-      name: 'Points Backstage Server',
+      name: 'Dominate Server',
       script: './main.js',
       error: './logs/error.log',
       output: './logs/server.log',
       log_type: 'json',
       env: {
-        NODE_TLS_REJECT_UNAUTHORIZED: '0'
-      }
+        NODE_TLS_REJECT_UNAUTHORIZED: '0',
+      },
     },
   ],
 };

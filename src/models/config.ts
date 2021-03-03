@@ -24,6 +24,8 @@ export type RedisConfig = {
 export type ServerConfig = {
   port: number;
   globalPrefix: string;
+  host: string;
+  protocol: string;
 };
 /** logger 設定 */
 export type LoggerConfig = {

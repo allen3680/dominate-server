@@ -99,7 +99,7 @@ export class CommonService {
     );
 
     return new Promise((resolve, reject) => {
-      const python = spawn('python3', [
+      const python = spawn('python', [
         this.pythonConfig.readCookie,
         host,
         folderPath,
@@ -113,9 +113,10 @@ export class CommonService {
           resolve(dataString);
         });
 
-        python.on('close', code => {
+        python.on('close', async code => {
           console.log(`child process close all stdio with code ${code}`);
-          resolve(dataString);
+
+          resolve(await JSON.tryParse(dataString));
         });
       } catch (error) {
         reject(error);

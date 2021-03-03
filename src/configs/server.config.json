@@ -1,7 +1,9 @@
 {
-  "port": 8120,
+  "port": 8100,
   "globalPrefix": "",
   "isHttps": false,
+  "host": "localhost",
+  "protocol": "http",
   "sslKey": "",
   "sslCert": ""
 }

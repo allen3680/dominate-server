@@ -26,6 +26,8 @@ export class CookieController {
       mode?: number;
     },
   ): Promise<string> {
+    console.log('uploadupload');
+
     return this.cookieService.upload({ files, ...body });
   }
 
@@ -40,6 +42,8 @@ export class CookieController {
   async fetchCookie(
     @Query() req: { startDate: Date; endDate: Date },
   ): Promise<{ cookieId: string; cookie: string }[] | string> {
+    console.log('fetchCookie');
+
     return this.cookieService.fetchCookies(req);
   }
 }
