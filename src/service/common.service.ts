@@ -17,7 +17,7 @@ export class CommonService {
   constructor(
     private configService: ConfigService,
     private loggerService: LoggerService,
-  ) {}
+  ) { }
 
   /** 儲存檔案 */
   async saveFile(args: {
@@ -41,13 +41,16 @@ export class CommonService {
       const folderUploadPath = path.resolve(
         __dirname,
         '..',
+        '..',
+        '..',
         'uploads',
         folderName,
       );
 
       await mkdirp(folderUploadPath);
 
-      const folderPath = path.resolve(__dirname, '..', 'uploads', folderName);
+      const folderPath = path.resolve(
+        __dirname, '..', '..', '..', 'uploads', folderName);
 
       await mkdirp(folderPath);
 
@@ -92,6 +95,8 @@ export class CommonService {
     console.log('folderName:', folderName);
     const folderPath = path.resolve(
       __dirname,
+      '..',
+      '..',
       '..',
       'uploads',
       'cookie',

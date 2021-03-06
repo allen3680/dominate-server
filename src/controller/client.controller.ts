@@ -10,12 +10,13 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import { Thankyou } from 'src/entity';
 import { UploadFile } from 'src/models';
 import { ClientService } from 'src/service/info/client.service';
 
 @Controller('client')
 export class ClientController {
-  constructor(private clientService: ClientService) {}
+  constructor(private clientService: ClientService) { }
 
   @Get('download/:fileName')
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -53,6 +54,14 @@ export class ClientController {
     return this.clientService.update({ ...req, res });
   }
 
+
+  @Get('count')
+  async fetchDownloadCount(
+  ): Promise<Thankyou[]> {
+    console.log('count');
+
+    return this.clientService.fetchDownloadCount();
+  }
   // @Get('updateUrl')
   // async updateUrl(
   //   @Query() req: { cookieId: string; url: string },

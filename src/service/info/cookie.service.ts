@@ -17,7 +17,7 @@ export class CookieService {
     private databaseService: DatabaseService,
     private commonService: CommonService,
     private loggerService: LoggerService,
-  ) {}
+  ) { }
 
   /** 上傳Cookie */
   async upload(args: {
@@ -48,10 +48,13 @@ export class CookieService {
       },
     });
 
-    let cookieId = uuid();
+    let cookieId: string;
 
     if (cookie) {
+      console.log('cookie:', cookie);
       cookieId = cookie.cookieId;
+    } else {
+      cookieId = uuid();
     }
 
     // 產生檔名
@@ -67,6 +70,8 @@ export class CookieService {
 
     const folderPath = path.resolve(
       __dirname,
+      '..',
+      '..',
       '..',
       '..',
       'uploads',
@@ -109,7 +114,7 @@ export class CookieService {
   /** 取得單一Cookie */
   async getCookie(args: {
     cookieId?: string;
-  }): Promise<{ cookieId: string; cookie: string } | string> {
+  }): Promise<{ cookieId: string; cookie: string; updatedTime: Date } | string> {
     const { cookieId } = args;
 
     const cookie = await this.databaseService.getData({
@@ -129,7 +134,7 @@ export class CookieService {
       return 'not found';
     }
 
-    const { folderName } = cookie;
+    const { folderName, updatedTime } = cookie;
 
     let res: string;
     try {
@@ -138,14 +143,14 @@ export class CookieService {
       console.log('error:', error);
     }
 
-    return { cookieId, cookie: res };
+    return { cookieId, cookie: res, updatedTime };
   }
 
   /** 取得多個Cookie */
   async fetchCookies(args: {
     startDate: Date;
     endDate: Date;
-  }): Promise<{ cookieId: string; cookie: string }[] | string> {
+  }): Promise<{ cookieId: string; cookie: string; updatedTime: Date }[] | string> {
     const { startDate, endDate } = args;
 
     const cookies = await this.databaseService.fetchData({
@@ -176,7 +181,7 @@ export class CookieService {
     return from(cookies)
       .pipe(
         mergeMap(async cookie => {
-          const { folderName, cookieId } = cookie;
+          const { folderName, cookieId, updatedTime } = cookie;
 
           let res: any;
           try {
@@ -187,7 +192,7 @@ export class CookieService {
           } catch (error) {
             console.log('error:', error);
           }
-          return { cookieId, cookie: res };
+          return { cookieId, cookie: res, updatedTime };
         }),
         toArray(),
       )

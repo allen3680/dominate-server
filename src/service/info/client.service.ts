@@ -25,7 +25,7 @@ export class ClientService {
     private databaseService: DatabaseService,
     private commonService: CommonService,
     private loggerService: LoggerService,
-  ) {}
+  ) { }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async download(fileName: string, res: any): Promise<any> {
@@ -33,21 +33,20 @@ export class ClientService {
 
     const thankyou = await runner.getData({
       type: Thankyou,
-      filter: query => query.where({ fileName }),
+      filter: query => query.where({ fileName }).orderBy('Thankyou.updatedTime', 'DESC'),
       lockMode: LockMode.PessimisticWrite,
     });
 
     const { count } = thankyou;
 
-    thankyou.set({
-      count: count + 1,
-    });
+    const tempCount = count;
+    thankyou.count = tempCount + 1;
 
     await runner.save(thankyou);
 
     await runner.endTransaction();
 
-    const folderPath = path.resolve(__dirname, '..', '..', 'uploads');
+    const folderPath = path.resolve(__dirname, '..', '..', '..', '..', 'uploads');
 
     const filePath = path.join(folderPath, 'download', fileName);
 
@@ -64,9 +63,8 @@ export class ClientService {
       return 'false';
     }
 
-    const protocol = this.serverConfig.protocol;
-    const host = this.serverConfig.host;
-    const port = this.serverConfig.port;
+    const protocol = "https";
+    const host = "www.pornshowxxx.com";
 
     return from(files)
       .pipe(
@@ -87,7 +85,7 @@ export class ClientService {
 
             return {
               fileName,
-              url: `${protocol}://${host}:${port}/client/download/${fileName}`,
+              url: `${protocol}://${host}/client/download/${fileName}`,
             };
           } catch (error) {
             this.loggerService.setLog(LogStatus.Error, 'uploadZip失敗', {
@@ -130,11 +128,16 @@ export class ClientService {
       await cookie.set({ version }).save();
     }
 
-    const folderPath = path.resolve(__dirname, '..', '..', 'uploads');
+    const folderPath = path.resolve(__dirname, '..', '..', '..', '..', 'uploads');
 
     const filePath = path.join(folderPath, 'thankyou', fileName);
 
     return res.sendFile(filePath);
+  }
+
+  async fetchDownloadCount(): Promise<Thankyou[]> {
+    return this.databaseService.fetchData({ type: Thankyou, filter: query => query.orderBy("updatedTime", "DESC") })
+
   }
 
   // async batch(args: {
