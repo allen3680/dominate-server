@@ -40,7 +40,11 @@ export class ClientService {
     const { count } = thankyou;
 
     const tempCount = count;
-    thankyou.count = tempCount + 1;
+
+    thankyou.set({
+      count: tempCount + 1,
+      updatedTime: new Date()
+    })
 
     await runner.save(thankyou);
 

@@ -102,6 +102,7 @@ export class CookieService {
       isUsed: false,
       status: cookieStatus.BrandNew,
       mode,
+      updatedTime: new Date()
     });
 
     await Cookie.save(newCookie);
