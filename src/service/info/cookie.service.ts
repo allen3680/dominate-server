@@ -134,7 +134,7 @@ export class CookieService {
       return 'not found';
     }
 
-    const { folderName, updatedTime } = cookie;
+    const { folderName, updatedTime, cookieId: dbCookieId } = cookie;
 
     let res: string;
     try {
@@ -143,7 +143,7 @@ export class CookieService {
       console.log('error:', error);
     }
 
-    return { cookieId, cookie: res, updatedTime };
+    return { cookieId: dbCookieId, cookie: res, updatedTime };
   }
 
   /** 取得多個Cookie */
