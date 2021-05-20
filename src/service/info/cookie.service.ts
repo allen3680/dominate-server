@@ -39,23 +39,23 @@ export class CookieService {
     }
 
     // 取得Cookie
-    const cookie = await this.databaseService.getData({
-      type: Cookie,
-      filter: query => {
-        query.where({ cookieId: rqUuid });
+    // const cookie = await this.databaseService.getData({
+    //   type: Cookie,
+    //   filter: query => {
+    //     query.where({ cookieId: rqUuid });
 
-        return query;
-      },
-    });
+    //     return query;
+    //   },
+    // });
 
-    let cookieId: string;
+    const cookieId: string = uuid();
 
-    if (cookie) {
-      console.log('cookie:', cookie);
-      cookieId = cookie.cookieId;
-    } else {
-      cookieId = uuid();
-    }
+    // if (cookie) {
+    //   console.log('cookie:', cookie);
+    //   cookieId = cookie.cookieId;
+    // } else {
+    //   cookieId = uuid();
+    // }
 
     // 產生檔名
     const fileName = cookieId.replace(/\-/g, '');

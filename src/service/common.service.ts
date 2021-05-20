@@ -103,8 +103,10 @@ export class CommonService {
       folderName,
     );
 
+    console.log('path:', folderPath);
+
     return new Promise((resolve, reject) => {
-      const python = spawn('python', [
+      const python = spawn('python3', [
         this.pythonConfig.readCookie,
         host,
         folderPath,
@@ -120,10 +122,11 @@ export class CommonService {
 
         python.on('close', async code => {
           console.log(`child process close all stdio with code ${code}`);
-
+          console.log(dataString);
           resolve(await JSON.tryParse(dataString));
         });
       } catch (error) {
+        console.log('error:', error);
         reject(error);
       }
     });
