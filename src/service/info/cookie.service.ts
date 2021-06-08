@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Cookie } from 'src/entity';
 import { v4 as uuid } from 'uuid';
 import { LogStatus, UploadFile } from 'src/models';
-import { mergeMap, toArray } from 'rxjs/operators';
+import { concatMap, mergeMap, toArray } from 'rxjs/operators';
 import { from } from 'rxjs';
 import { DatabaseService } from 'src/service/database.service';
 import { CommonService } from 'src/service/common.service';
@@ -210,7 +210,7 @@ export class CookieService {
       type: Cookie,
       filter: query => {
         query.where({ status: 0, isUsed: false });
-        query.take(amount);
+        query.limit(amount);
         return query.orderBy('Cookie.updatedTime', 'DESC');
       },
     });
@@ -224,7 +224,7 @@ export class CookieService {
 
     return from(cookies)
       .pipe(
-        mergeMap(async cookie => {
+        concatMap(async cookie => {
           const { folderName, cookieId, updatedTime } = cookie;
 
           cookie.isUsed = true;
