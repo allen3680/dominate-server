@@ -46,4 +46,13 @@ export class CookieController {
 
     return this.cookieService.fetchCookies(req);
   }
+
+  @Get('use')
+  async useCookie(
+    @Query() req: { amount: number },
+  ): Promise<{ cookieId: string; cookie: string; updatedTime: Date }[] | string> {
+    console.log('useCookie');
+
+    return this.cookieService.useCookies(req);
+  }
 }

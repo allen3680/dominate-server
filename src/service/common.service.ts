@@ -117,6 +117,8 @@ export class CommonService {
         let dataString: string;
         python.stdout.on('data', data => {
           dataString = data.toString();
+          // dataString = dataString.replace('\n', '');
+          // dataString = dataString.replace('', '');
           resolve(dataString);
         });
 

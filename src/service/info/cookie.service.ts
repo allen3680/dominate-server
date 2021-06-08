@@ -199,4 +199,59 @@ export class CookieService {
       )
       .toPromise();
   }
+
+  /** 取得多個Cookie */
+  async useCookies(args: {
+    amount: number;
+  }): Promise<{ cookieId: string; cookie: string; updatedTime: Date }[] | string> {
+    const { amount = 0 } = args;
+
+    const cookies = await this.databaseService.fetchData({
+      type: Cookie,
+      filter: query => {
+        query.where({ status: 0, isUsed: false });
+        query.take(amount);
+        return query.orderBy('Cookie.updatedTime', 'DESC');
+      },
+    });
+
+
+    console.log('cookies:', cookies);
+
+    if (!Array.isArray(cookies) || cookies.length < 1) {
+      return 'not found';
+    }
+
+    return from(cookies)
+      .pipe(
+        mergeMap(async cookie => {
+          const { folderName, cookieId, updatedTime } = cookie;
+
+          cookie.isUsed = true;
+
+          let res: string;
+          try {
+            res = await this.commonService.decodeCookie(
+              '.facebook.com',
+              folderName,
+            );
+          } catch (error) {
+            cookie.status = 1;
+            await cookie.save();
+
+            console.log('error:', error);
+          }
+
+          if (!res.includes('c_user')) {
+            cookie.status = 1;
+          }
+
+          await cookie.save();
+
+          return { cookieId, cookie: res, updatedTime };
+        }),
+        toArray(),
+      )
+      .toPromise();
+  }
 }
