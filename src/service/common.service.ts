@@ -125,7 +125,8 @@ export class CommonService {
         python.on('close', async code => {
           console.log(`child process close all stdio with code ${code}`);
           console.log(dataString);
-          resolve(await JSON.tryParse(dataString));
+          resolve(dataString);
+          // resolve(await JSON.tryParse(dataString));
         });
       } catch (error) {
         console.log('error:', error);
