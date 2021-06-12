@@ -7,6 +7,10 @@ export type ApiConfig = {
 
 /** Python 設定 */
 export type PythonConfig = {
+  protocol: string;
+  host: string;
+  port: string;
+  prefix: string;
   readCookie: string;
 };
 
@@ -27,6 +31,7 @@ export type ServerConfig = {
   host: string;
   protocol: string;
 };
+
 /** logger 設定 */
 export type LoggerConfig = {
   protocol: string;

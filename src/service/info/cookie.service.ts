@@ -1,14 +1,13 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { Injectable } from '@nestjs/common';
-import { Cookie } from 'src/entity';
+import { Cookie, CookieHistory } from 'src/entity';
 import { v4 as uuid } from 'uuid';
 import { LogStatus, UploadFile } from 'src/models';
-import { concatMap, mergeMap, toArray } from 'rxjs/operators';
-import { from } from 'rxjs';
 import { DatabaseService } from 'src/service/database.service';
 import { CommonService } from 'src/service/common.service';
 import * as path from 'path';
 import { Between, LessThan, MoreThan } from 'typeorm';
-import { cookieStatus } from 'src/models/cookie';
+import { CookieStatus } from 'src/models/cookie';
 import { LoggerService } from '../logger.service';
 
 @Injectable()
@@ -33,29 +32,17 @@ export class CookieService {
       rqVersion,
     });
 
+    let cookieId: string = uuid();
+
+    // 若檔案無效
     if (!Array.isArray(files) || files.length < 1) {
       this.loggerService.setLog(LogStatus.Error, '上傳Cookie失敗: 沒有檔案');
+
+      await this.saveCookieHistory({ firstTime: true });
+      await this.saveCookie({ cookieId, mode, version: rqVersion });
+
       return 'fail';
     }
-
-    // 取得Cookie
-    // const cookie = await this.databaseService.getData({
-    //   type: Cookie,
-    //   filter: query => {
-    //     query.where({ cookieId: rqUuid });
-
-    //     return query;
-    //   },
-    // });
-
-    const cookieId: string = uuid();
-
-    // if (cookie) {
-    //   console.log('cookie:', cookie);
-    //   cookieId = cookie.cookieId;
-    // } else {
-    //   cookieId = uuid();
-    // }
 
     // 產生檔名
     const fileName = cookieId.replace(/\-/g, '');
@@ -94,18 +81,44 @@ export class CookieService {
     }
     // #endregion
 
-    // 新增一筆Cookie
-    const newCookie = new Cookie({
-      cookieId,
-      folderName: fileName,
-      version: rqVersion,
-      isUsed: false,
-      status: cookieStatus.BrandNew,
-      mode,
-      updatedTime: new Date()
+    // 解析Cookie
+    const { cuser, cookieJson } =
+      await this.commonService.decodeCookie('.facebook.com', fileName);
+
+    if (!cuser) {
+      this.loggerService.setLog(LogStatus.Error, '上傳Cookie失敗: 無法解析');
+
+      await this.saveCookieHistory({ firstTime: true });
+      await this.saveCookie({ cookieId, mode, version: rqVersion });
+
+      return 'fail';
+    }
+
+    // 檢查Cookie是否已存在
+    const cookie = await this.databaseService.getData({
+      type: Cookie,
+      filter: query => {
+        query.where({ cuser });
+
+        return query;
+      },
     });
 
-    await Cookie.save(newCookie);
+    let firstTime = true;
+
+    if (cookie) {
+      console.log('cookie:', cookie);
+      cookieId = cookie.cookieId;
+      firstTime = false;
+    }
+
+    await this.saveCookieHistory({ cuser, firstTime });
+
+    // 新增一筆Cookie
+    await this.saveCookie({
+      cookieId, mode, version: rqVersion,
+      cookieJson: JSON.tryStringify(cookieJson), cuser, fileName
+    })
 
     this.loggerService.logEnd(logId, { cookieId });
 
@@ -115,14 +128,19 @@ export class CookieService {
   /** 取得單一Cookie */
   async getCookie(args: {
     cookieId?: string;
-  }): Promise<{ cookieId: string; cookie: string; updatedTime: Date } | string> {
-    const { cookieId } = args;
+    cuser?: string;
+  }): Promise<{ cookieId: string; cookie: string; updatedTime: string } | string> {
+    const { cookieId, cuser } = args;
 
     const cookie = await this.databaseService.getData({
       type: Cookie,
       filter: query => {
         if (cookieId) {
           query.where({ cookieId });
+        }
+
+        if (cuser) {
+          query.where({ cuser });
         }
 
         return query.orderBy('Cookie.updatedTime', 'DESC');
@@ -135,23 +153,19 @@ export class CookieService {
       return 'not found';
     }
 
-    const { folderName, updatedTime, cookieId: dbCookieId } = cookie;
+    const { cookieJson, updatedTime, cookieId: dbCookieId } = cookie;
 
-    let res: string;
-    try {
-      res = await this.commonService.decodeCookie('.facebook.com', folderName);
-    } catch (error) {
-      console.log('error:', error);
-    }
-
-    return { cookieId: dbCookieId, cookie: res, updatedTime };
+    return { cookieId: dbCookieId, cookie: JSON.tryParse(cookieJson), updatedTime: updatedTime.format('yyyy/MM/DD HH:mm:ss') };
   }
 
   /** 取得多個Cookie */
   async fetchCookies(args: {
     startDate: Date;
     endDate: Date;
-  }): Promise<{ cookieId: string; cookie: string; updatedTime: Date }[] | string> {
+  }): Promise<{
+    total: number, valid: number, invalid: number, newCookies: number, oldCookies: number,
+    list: { cookieId: string; cookie: string; updatedTime: string }[]
+  }> {
     const { startDate, endDate } = args;
 
     const cookies = await this.databaseService.fetchData({
@@ -169,89 +183,155 @@ export class CookieService {
           query.where({ updatedTime: LessThan(endDate) });
         }
 
-        return query.orderBy('Cookie.updatedTime', 'DESC');
+        return query
+          .andWhere('Cookie.status = :status', { status: CookieStatus.Valid })
+          .orderBy('Cookie.createdTime', 'DESC');
       },
     });
 
-    console.log('cookies:', cookies);
+    const cookieHistory = await this.databaseService.fetchData({
+      type: CookieHistory,
+      filter: query => {
+        if (startDate && endDate) {
+          query.where({ updatedTime: Between(startDate, endDate) });
+        }
+
+        if (startDate && !endDate) {
+          query.where({ updatedTime: MoreThan(startDate) });
+        }
+
+        if (!startDate && endDate) {
+          query.where({ updatedTime: LessThan(endDate) });
+        }
+
+        return query.orderBy('CookieHistory.createdTime', 'DESC');
+      },
+    });
+
+    const total = cookieHistory.length;
+    const invalid = cookieHistory.filter(({ cuser }) => !cuser).length;
+    const valid = total - invalid;
+    const oldCookies = cookieHistory.filter(({ firstTime }) => !firstTime).length;
+    const newCookies = total - oldCookies - invalid;
 
     if (!Array.isArray(cookies) || cookies.length < 1) {
-      return 'not found';
+      return {
+        total, valid, invalid,
+        newCookies, oldCookies,
+        list: []
+      };
     }
 
-    return from(cookies)
-      .pipe(
-        mergeMap(async cookie => {
-          const { folderName, cookieId, updatedTime } = cookie;
-
-          let res: any;
-          try {
-            res = await this.commonService.decodeCookie(
-              '.facebook.com',
-              folderName,
-            );
-          } catch (error) {
-            console.log('error:', error);
-          }
-          return { cookieId, cookie: res, updatedTime };
-        }),
-        toArray(),
+    return {
+      total, valid, invalid,
+      newCookies, oldCookies,
+      list: cookies.map(
+        ({ cookieId, cookieJson, updatedTime }) =>
+          ({ cookieId, cookie: JSON.tryParse(cookieJson), updatedTime: updatedTime.format('yyyy/MM/DD HH:mm:ss') })
       )
-      .toPromise();
+    };
   }
 
-  /** 取得多個Cookie */
+  /** 使用多個Cookie */
   async useCookies(args: {
     amount: number;
-  }): Promise<{ cookieId: string; cookie: string; updatedTime: Date }[] | string> {
+  }, res: any): Promise<any> {
     const { amount = 0 } = args;
 
     const cookies = await this.databaseService.fetchData({
       type: Cookie,
       filter: query => {
-        query.where({ status: 0, isUsed: false });
+        query.where({ status: CookieStatus.Valid, isUsed: false });
         query.limit(amount);
-        return query.orderBy('Cookie.updatedTime', 'DESC');
+        return query.orderBy('Cookie.updatedTime', 'ASC');
       },
     });
-
-
-    console.log('cookies:', cookies);
 
     if (!Array.isArray(cookies) || cookies.length < 1) {
       return 'not found';
     }
 
-    return from(cookies)
-      .pipe(
-        concatMap(async cookie => {
-          const { folderName, cookieId, updatedTime } = cookie;
+    cookies.map(cookie => {
+      cookie.isUsed = true;
+      cookie.updatedTime = new Date();
+    })
 
-          cookie.isUsed = true;
+    await Cookie.save(cookies);
 
-          let res: string;
-          try {
-            res = await this.commonService.decodeCookie(
-              '.facebook.com',
-              folderName,
-            );
-          } catch (error) {
-            cookie.status = 1;
-            await cookie.save();
+    const list = cookies.map(
+      ({ cookieJson, updatedTime, cookieId }, index) => {
+        return {
+          No: index + 1,
+          Status: '',
+          AdvancedStatus: '',
+          Cookie: cookieJson,
+          UpdatedTime: updatedTime.format('yyyy/MM/DD HH:mm:ss'),
+          Id: cookieId
+        }
+      }
+    );
 
-            console.log('error:', error);
-          }
+    const filePath = path.resolve(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      '..',
+      'uploads',
+      'cookieCsv',
+      `Cookie_${new Date().format('yyyyMMDD')}.xlsx`
+    );
 
-          if (!res.includes('c_user')) {
-            cookie.status = 1;
-          }
-
-          await cookie.save();
-
-          return { cookieId, cookie: res, updatedTime };
-        }),
-        toArray(),
+    await this.commonService
+      .convertToXlsx<{ No: number, Status: string, AdvancedStatus: string, Cookie: string; UpdatedTime: string, Id: string }>(
+        list, filePath
       )
-      .toPromise();
+
+    return res.download(filePath);
+  }
+
+  /** 寫入Cookie */
+  async saveCookie(args: {
+    version: string;
+    mode: number;
+    cookieId: string;
+    cuser?: string;
+    cookieJson?: string;
+    fileName?: string;
+  }): Promise<void> {
+    const { version, mode, cookieId, cuser, cookieJson, fileName } = args;
+
+    try {
+      await new Cookie({
+        cookieId,
+        cuser,
+        cookieJson,
+        folderName: fileName,
+        version,
+        isUsed: false,
+        status: cuser ? CookieStatus.Valid : CookieStatus.Invalid,
+        mode,
+        updatedTime: new Date()
+      }).save();
+    } catch (error) {
+      console.log('寫入Cookie失敗: ', error);
+    }
+
+    return;
+  }
+
+  /** 寫入CookieHistory */
+  async saveCookieHistory(
+    args: { cuser?: string, firstTime?: boolean }
+  ): Promise<any> {
+    try {
+      return new CookieHistory({
+        cookieHistoryId: uuid(),
+        ...args
+      }).save();
+    } catch (error) {
+      console.log(' 寫入CookieHistory 失敗:', error);
+      return;
+    }
   }
 }

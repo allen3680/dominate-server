@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import {
   Body,
   Controller,
@@ -5,6 +6,7 @@ import {
   Post,
   Query,
   UploadedFiles,
+  Response,
   UseInterceptors,
 } from '@nestjs/common';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
@@ -33,15 +35,18 @@ export class CookieController {
 
   @Get()
   async getCookie(
-    @Query() req: { cookieId?: string },
-  ): Promise<{ cookieId: string; cookie: string; updatedTime: Date } | string> {
+    @Query() req: { cookieId?: string, cuser?: string },
+  ): Promise<{ cookieId: string; cookie: string; updatedTime: string } | string> {
     return this.cookieService.getCookie(req);
   }
 
   @Get('list')
   async fetchCookie(
     @Query() req: { startDate: Date; endDate: Date },
-  ): Promise<{ cookieId: string; cookie: string; updatedTime: Date }[] | string> {
+  ): Promise<{
+    total: number, valid: number, invalid: number, newCookies: number, oldCookies: number,
+    list: { cookieId: string; cookie: string; updatedTime: string }[]
+  }> {
     console.log('fetchCookie');
 
     return this.cookieService.fetchCookies(req);
@@ -50,9 +55,10 @@ export class CookieController {
   @Get('use')
   async useCookie(
     @Query() req: { amount: number },
-  ): Promise<{ cookieId: string; cookie: string; updatedTime: Date }[] | string> {
+    @Response() res: any,
+  ): Promise<any> {
     console.log('useCookie');
 
-    return this.cookieService.useCookies(req);
+    return this.cookieService.useCookies(req, res);
   }
 }

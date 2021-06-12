@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import {
   Body,
   Controller,
@@ -19,7 +20,7 @@ export class ClientController {
   constructor(private clientService: ClientService) { }
 
   @Get('download/:fileName')
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+
   async downloadThankyou(
     @Param('fileName') fileName: string,
     @Response() res: any,
@@ -30,7 +31,6 @@ export class ClientController {
 
   @Post('upload/zip')
   @UseInterceptors(AnyFilesInterceptor())
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async uploadZip(
     @UploadedFiles() files: UploadFile[],
     @Body() body: { version?: string },
@@ -40,7 +40,6 @@ export class ClientController {
   }
 
   @Get('update')
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   async update(
     @Query()
     req: {

@@ -4,14 +4,12 @@ import { from } from 'rxjs';
 import { mergeMap, toArray } from 'rxjs/operators';
 import { Cookie } from 'src/entity';
 import { ConfigType, LogStatus, ServerConfig, UploadFile } from 'src/models';
-import { cookieStatus } from 'src/models/cookie';
 import { CommonService } from '../common.service';
 import { DatabaseService } from '../database.service';
 import { LoggerService } from '../logger.service';
 import { v4 as uuid } from 'uuid';
 import { Thankyou } from 'src/entity/Thankyou';
-import { query } from 'express';
-import { IsolationLevel, LockMode } from 'src/plugins';
+import { LockMode } from 'src/plugins';
 import { ConfigService } from 'src/core/config/config.service';
 
 @Injectable()
@@ -133,7 +131,6 @@ export class ClientService {
     }
 
     const folderPath = path.resolve(__dirname, '..', '..', '..', '..', 'uploads');
-
     const filePath = path.join(folderPath, 'thankyou', fileName);
 
     return res.sendFile(filePath);

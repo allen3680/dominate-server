@@ -1,6 +1,6 @@
-export enum cookieStatus {
-  /** 全新 */
-  BrandNew = 0,
-  /** 存活 */
-  Alive = 1,
+export enum CookieStatus {
+  /** 有效 */
+  Valid = 0,
+  /** 無效 */
+  Invalid = 1,
 }
