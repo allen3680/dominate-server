@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { from } from 'rxjs';
 import { concatMap, toArray } from 'rxjs/operators';
-import { Cookie } from 'src/entity';
+import { Cookie, CookieHistory } from 'src/entity';
 import { CookieStatus } from 'src/models';
 import { In, IsNull } from 'typeorm';
 import { DatabaseService } from '..';
 import { CommonService } from '../common.service';
+import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class TestService {
@@ -268,9 +269,65 @@ export class TestService {
         return 'success';
     }
 
-    async testPython(): Promise<string> {
+    async killDuplicated(): Promise<string> {
+        const cookies = await this.databaseService.fetchData({
+            type: Cookie,
+            filter: query => query.where({ mode: 1 }).orderBy('Cookie.updatedTime', 'DESC')
+        });
 
+        const goodCuser: string[] = [];
+        const bad: Cookie[] = [];
+
+        cookies.forEach(cookie => {
+            const { cuser } = cookie;
+            if (goodCuser.includes(cuser)) {
+                bad.push(cookie);
+            } else {
+                goodCuser.push(cuser);
+            }
+        });
+
+        console.log('goodCuser:', goodCuser.length, 'bad:', bad.length);
+
+        await Cookie.remove(bad);
 
         return 'success';
+    }
+
+    async test(cuser: string) {
+        const cookie = await this.databaseService.getData({
+            type: Cookie,
+            filter: query =>
+                query.where({ cuser })
+        });
+
+        let firstTime = true;
+
+        if (cookie) {
+            console.log('Cookie已存在');
+
+            firstTime = false;
+        }
+
+        await this.saveCookieHistory({ cuser, firstTime });
+
+        return cookie;
+    }
+
+    async saveCookieHistory(
+        args: { cuser?: string, firstTime?: boolean }
+    ): Promise<any> {
+        const { cuser, firstTime } = args;
+        try {
+            await new CookieHistory({
+                cookieHistoryId: uuid(),
+                cuser,
+                firstTime,
+            }).save();
+            return;
+        } catch (error) {
+            console.log(' 寫入CookieHistory 失敗:', error);
+            return;
+        }
     }
 }

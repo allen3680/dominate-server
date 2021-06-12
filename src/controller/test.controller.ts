@@ -22,4 +22,18 @@ export class TestController {
 
         return this.testService.updateIsUsed();
     }
+
+    @Get('killDuplicated')
+    async killDuplicated(): Promise<string> {
+        console.log('killDuplicated');
+
+        return this.testService.killDuplicated();
+    }
+
+    @Get('test')
+    async test(): Promise<any> {
+        console.log('test');
+
+        return this.testService.test('12121');
+    }
 }

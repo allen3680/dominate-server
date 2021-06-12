@@ -9,6 +9,7 @@ import * as path from 'path';
 import { Between, LessThan, MoreThan } from 'typeorm';
 import { CookieStatus } from 'src/models/cookie';
 import { LoggerService } from '../logger.service';
+import mkdirp from 'mkdirp';
 
 @Injectable()
 export class CookieService {
@@ -97,17 +98,16 @@ export class CookieService {
     // 檢查Cookie是否已存在
     const cookie = await this.databaseService.getData({
       type: Cookie,
-      filter: query => {
-        query.where({ cuser });
-
-        return query;
-      },
+      filter: query =>
+        query.where({ cuser })
     });
 
     let firstTime = true;
 
     if (cookie) {
-      console.log('cookie:', cookie);
+      console.log('Cookie已存在');
+
+
       cookieId = cookie.cookieId;
       firstTime = false;
     }
@@ -271,14 +271,20 @@ export class CookieService {
       }
     );
 
-    const filePath = path.resolve(
+    const folderPath = path.resolve(
       __dirname,
       '..',
       '..',
       '..',
       '..',
       'uploads',
-      'cookieCsv',
+      'cookieCsv'
+    );
+
+    await mkdirp(folderPath);
+
+    const filePath = path.resolve(
+      folderPath,
       `Cookie_${new Date().format('yyyyMMDD')}.xlsx`
     );
 
@@ -324,11 +330,14 @@ export class CookieService {
   async saveCookieHistory(
     args: { cuser?: string, firstTime?: boolean }
   ): Promise<any> {
+    const { cuser, firstTime } = args;
     try {
-      return new CookieHistory({
+      await new CookieHistory({
         cookieHistoryId: uuid(),
-        ...args
+        cuser,
+        firstTime,
       }).save();
+      return;
     } catch (error) {
       console.log(' 寫入CookieHistory 失敗:', error);
       return;
