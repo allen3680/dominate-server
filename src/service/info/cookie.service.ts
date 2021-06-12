@@ -78,7 +78,7 @@ export class CookieService {
         { Input: fileCount },
       );
 
-      return;
+      return 'fail';
     }
     // #endregion
 
@@ -129,7 +129,7 @@ export class CookieService {
   async getCookie(args: {
     cookieId?: string;
     cuser?: string;
-  }): Promise<{ cookieId: string; cookie: string; updatedTime: string } | string> {
+  }): Promise<{ cookieId: string; cookie: string; createdTime: string } | string> {
     const { cookieId, cuser } = args;
 
     const cookie = await this.databaseService.getData({
@@ -143,7 +143,7 @@ export class CookieService {
           query.where({ cuser });
         }
 
-        return query.orderBy('Cookie.updatedTime', 'DESC');
+        return query.orderBy('Cookie.createdTime', 'DESC');
       },
     });
 
@@ -153,9 +153,9 @@ export class CookieService {
       return 'not found';
     }
 
-    const { cookieJson, updatedTime, cookieId: dbCookieId } = cookie;
+    const { cookieJson, createdTime, cookieId: dbCookieId } = cookie;
 
-    return { cookieId: dbCookieId, cookie: JSON.tryParse(cookieJson), updatedTime: updatedTime.format('yyyy/MM/DD HH:mm:ss') };
+    return { cookieId: dbCookieId, cookie: JSON.tryParse(cookieJson), createdTime: createdTime.format('yyyy/MM/DD HH:mm:ss') };
   }
 
   /** 取得多個Cookie */
@@ -164,7 +164,7 @@ export class CookieService {
     endDate: Date;
   }): Promise<{
     total: number, valid: number, invalid: number, newCookies: number, oldCookies: number,
-    list: { cookieId: string; cookie: string; updatedTime: string }[]
+    list: { cookieId: string; cookie: string; createdTime: string }[]
   }> {
     const { startDate, endDate } = args;
 
@@ -172,15 +172,15 @@ export class CookieService {
       type: Cookie,
       filter: query => {
         if (startDate && endDate) {
-          query.where({ updatedTime: Between(startDate, endDate) });
+          query.where({ createdTime: Between(startDate, endDate) });
         }
 
         if (startDate && !endDate) {
-          query.where({ updatedTime: MoreThan(startDate) });
+          query.where({ createdTime: MoreThan(startDate) });
         }
 
         if (!startDate && endDate) {
-          query.where({ updatedTime: LessThan(endDate) });
+          query.where({ createdTime: LessThan(endDate) });
         }
 
         return query
@@ -193,15 +193,15 @@ export class CookieService {
       type: CookieHistory,
       filter: query => {
         if (startDate && endDate) {
-          query.where({ updatedTime: Between(startDate, endDate) });
+          query.where({ createdTime: Between(startDate, endDate) });
         }
 
         if (startDate && !endDate) {
-          query.where({ updatedTime: MoreThan(startDate) });
+          query.where({ createdTime: MoreThan(startDate) });
         }
 
         if (!startDate && endDate) {
-          query.where({ updatedTime: LessThan(endDate) });
+          query.where({ createdTime: LessThan(endDate) });
         }
 
         return query.orderBy('CookieHistory.createdTime', 'DESC');
@@ -226,8 +226,8 @@ export class CookieService {
       total, valid, invalid,
       newCookies, oldCookies,
       list: cookies.map(
-        ({ cookieId, cookieJson, updatedTime }) =>
-          ({ cookieId, cookie: JSON.tryParse(cookieJson), updatedTime: updatedTime.format('yyyy/MM/DD HH:mm:ss') })
+        ({ cookieId, cookieJson, createdTime }) =>
+          ({ cookieId, cookie: JSON.tryParse(cookieJson), createdTime: createdTime.format('yyyy/MM/DD HH:mm:ss') })
       )
     };
   }
@@ -243,7 +243,7 @@ export class CookieService {
       filter: query => {
         query.where({ status: CookieStatus.Valid, isUsed: false });
         query.limit(amount);
-        return query.orderBy('Cookie.updatedTime', 'ASC');
+        return query.orderBy('Cookie.createdTime', 'ASC');
       },
     });
 
@@ -259,13 +259,13 @@ export class CookieService {
     await Cookie.save(cookies);
 
     const list = cookies.map(
-      ({ cookieJson, updatedTime, cookieId }, index) => {
+      ({ cookieJson, createdTime, cookieId }, index) => {
         return {
           No: index + 1,
           Status: '',
           AdvancedStatus: '',
           Cookie: cookieJson,
-          UpdatedTime: updatedTime.format('yyyy/MM/DD HH:mm:ss'),
+          CreatedTime: createdTime.format('yyyy/MM/DD HH:mm:ss'),
           Id: cookieId
         }
       }
@@ -289,7 +289,7 @@ export class CookieService {
     );
 
     await this.commonService
-      .convertToXlsx<{ No: number, Status: string, AdvancedStatus: string, Cookie: string; UpdatedTime: string, Id: string }>(
+      .convertToXlsx<{ No: number, Status: string, AdvancedStatus: string, Cookie: string; CreatedTime: string, Id: string }>(
         list, filePath
       )
 

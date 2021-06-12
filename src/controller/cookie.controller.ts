@@ -36,7 +36,7 @@ export class CookieController {
   @Get()
   async getCookie(
     @Query() req: { cookieId?: string, cuser?: string },
-  ): Promise<{ cookieId: string; cookie: string; updatedTime: string } | string> {
+  ): Promise<{ cookieId: string; cookie: string; createdTime: string } | string> {
     return this.cookieService.getCookie(req);
   }
 
@@ -45,7 +45,7 @@ export class CookieController {
     @Query() req: { startDate: Date; endDate: Date },
   ): Promise<{
     total: number, valid: number, invalid: number, newCookies: number, oldCookies: number,
-    list: { cookieId: string; cookie: string; updatedTime: string }[]
+    list: { cookieId: string; cookie: string; createdTime: string }[]
   }> {
     console.log('fetchCookie');
 
