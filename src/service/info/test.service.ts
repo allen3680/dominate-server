@@ -260,11 +260,40 @@ export class TestService {
 
         console.log('cookies:', cookies.length);
 
-        cookies.map(cookie => {
-            cookie.isUsed = true;
+        const notin: string[] = [];
+
+        const cc = cookies.map(cookie => cookie.cuser);
+
+        list.forEach(l => {
+            if (!cc.includes(l)) {
+                notin.push(l);
+            }
         });
 
-        await Cookie.save(cookies, { chunk: 10 });
+        console.log('notin:', notin);
+
+        // const ccc: Cookie[] = []
+
+        // notin.forEach(cuser => {
+        //     ccc.push(new Cookie({
+        //         cookieId: uuid(),
+        //         cuser,
+        //         cookieJson: '',
+        //         folderName: '',
+        //         version: '1.0.0',
+        //         isUsed: true,
+        //         status: CookieStatus.Valid,
+        //         mode: 0,
+        //         updatedTime: new Date()
+        //     }))
+        // });
+
+
+        // cookies.map(cookie => {
+        //     cookie.isUsed = true;
+        // });
+
+        // await Cookie.save(ccc, { chunk: 10 });
 
         return 'success';
     }

@@ -44,7 +44,7 @@ export class CookieController {
   async fetchCookie(
     @Query() req: { startDate: Date; endDate: Date },
   ): Promise<{
-    total: number, valid: number, invalid: number, newCookies: number, oldCookies: number,
+    total: number, valid: number, invalid: number, newCookies: number, oldCookies: number, totalWithoutOld: number
     list: { cookieId: string; cookie: string; createdTime: string }[]
   }> {
     console.log('fetchCookie');

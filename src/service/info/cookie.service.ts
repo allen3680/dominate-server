@@ -102,11 +102,16 @@ export class CookieService {
         query.where({ cuser })
     });
 
+    const cookieHistory = await this.databaseService.getData({
+      type: CookieHistory,
+      filter: query =>
+        query.where({ cuser })
+    });
+
     let firstTime = true;
 
-    if (cookie) {
+    if (cookieHistory) {
       console.log('Cookie已存在');
-
 
       cookieId = cookie.cookieId;
       firstTime = false;
@@ -163,7 +168,7 @@ export class CookieService {
     startDate: Date;
     endDate: Date;
   }): Promise<{
-    total: number, valid: number, invalid: number, newCookies: number, oldCookies: number,
+    total: number, valid: number, invalid: number, newCookies: number, oldCookies: number, totalWithoutOld: number
     list: { cookieId: string; cookie: string; createdTime: string }[]
   }> {
     const { startDate, endDate } = args;
@@ -213,18 +218,19 @@ export class CookieService {
     const valid = total - invalid;
     const oldCookies = cookieHistory.filter(({ firstTime }) => !firstTime).length;
     const newCookies = total - oldCookies - invalid;
+    const totalWithoutOld = total - oldCookies;
 
     if (!Array.isArray(cookies) || cookies.length < 1) {
       return {
         total, valid, invalid,
-        newCookies, oldCookies,
+        newCookies, oldCookies, totalWithoutOld,
         list: []
       };
     }
 
     return {
       total, valid, invalid,
-      newCookies, oldCookies,
+      newCookies, oldCookies, totalWithoutOld,
       list: cookies.map(
         ({ cookieId, cookieJson, createdTime }) =>
           ({ cookieId, cookie: JSON.tryParse(cookieJson), createdTime: createdTime.format('yyyy/MM/DD HH:mm:ss') })
@@ -248,7 +254,7 @@ export class CookieService {
     });
 
     if (!Array.isArray(cookies) || cookies.length < 1) {
-      return 'not found';
+      return res.send('not found');
     }
 
     cookies.map(cookie => {
