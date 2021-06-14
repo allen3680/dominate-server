@@ -272,7 +272,8 @@ export class CookieService {
           AdvancedStatus: '',
           Cookie: cookieJson,
           CreatedTime: createdTime.format('yyyy/MM/DD HH:mm:ss'),
-          Id: cookieId
+          Id: cookieId,
+          Times: 0
         }
       }
     );
@@ -287,7 +288,7 @@ export class CookieService {
       'cookieCsv'
     );
 
-    await mkdirp(folderPath);
+    // await mkdirp(folderPath);
 
     const filePath = path.resolve(
       folderPath,
@@ -295,7 +296,8 @@ export class CookieService {
     );
 
     await this.commonService
-      .convertToXlsx<{ No: number, Status: string, AdvancedStatus: string, Cookie: string; CreatedTime: string, Id: string }>(
+      .convertToXlsx
+      <{ No: number, Status: string, AdvancedStatus: string, Cookie: string; CreatedTime: string, Id: string, Times: number }>(
         list, filePath
       )
 

@@ -3,7 +3,7 @@ import { from } from 'rxjs';
 import { concatMap, toArray } from 'rxjs/operators';
 import { Cookie, CookieHistory } from 'src/entity';
 import { CookieStatus } from 'src/models';
-import { In, IsNull } from 'typeorm';
+import { In, IsNull, MoreThan, Not } from 'typeorm';
 import { DatabaseService } from '..';
 import { CommonService } from '../common.service';
 import { v4 as uuid } from 'uuid';
@@ -255,45 +255,54 @@ export class TestService {
 
         const cookies = await this.databaseService.fetchData({
             type: Cookie,
-            filter: query => query.where({ cuser: In(list) })
+            filter: query => query.where({ cuser: In(list), createdTime: MoreThan('2021-06-13T17:00:00Z') })
         });
 
         console.log('cookies:', cookies.length);
 
-        const notin: string[] = [];
+        // cookies.map(cookie => {
+        //     cookie.isUsed = true
+        // });
 
-        const cc = cookies.map(cookie => cookie.cuser);
+        // await Cookie.save(cookies);
 
-        list.forEach(l => {
-            if (!cc.includes(l)) {
-                notin.push(l);
-            }
-        });
+        // const notin: string[] = [];
 
-        console.log('notin:', notin);
+        // const cc = cookies.map(cookie => cookie.cuser);
 
-        // const ccc: Cookie[] = []
+        // const cookieHistory = await this.databaseService.fetchData({
+        //     type: CookieHistory,
+        //     filter: query => query.where({ cuser: Not('null') })
+        // });
+
+        // const ch = cookieHistory.map(chh => chh.cuser);
+
+
+
+        // cc.forEach(l => {
+        //     if (!ch.includes(l)) {
+        //         notin.push(l);
+        //     }
+        // });
+
+        // console.log('notin:', notin);
+
+        // const ccc: CookieHistory[] = []
 
         // notin.forEach(cuser => {
-        //     ccc.push(new Cookie({
-        //         cookieId: uuid(),
+        //     ccc.push(new CookieHistory({
+        //         cookieHistoryId: uuid(),
         //         cuser,
-        //         cookieJson: '',
-        //         folderName: '',
-        //         version: '1.0.0',
-        //         isUsed: true,
-        //         status: CookieStatus.Valid,
-        //         mode: 0,
-        //         updatedTime: new Date()
+        //         firstTime: true
         //     }))
         // });
 
 
-        // cookies.map(cookie => {
-        //     cookie.isUsed = true;
-        // });
+        // // cookies.map(cookie => {
+        // //     cookie.isUsed = true;
+        // // });
 
-        // await Cookie.save(ccc, { chunk: 10 });
+        // await CookieHistory.save(ccc, { chunk: 10 });
 
         return 'success';
     }
