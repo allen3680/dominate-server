@@ -33,14 +33,14 @@ export class CookieService {
       rqVersion,
     });
 
-    let cookieId: string = uuid();
+    const cookieId: string = uuid();
 
     // 若檔案無效
     if (!Array.isArray(files) || files.length < 1) {
       this.loggerService.setLog(LogStatus.Error, '上傳Cookie失敗: 沒有檔案');
 
       await this.saveCookieHistory({ firstTime: true });
-      await this.saveCookie({ cookieId, mode, version: rqVersion });
+      // await this.saveCookie({ cookieId, mode, version: rqVersion });
 
       return 'fail';
     }
@@ -90,17 +90,17 @@ export class CookieService {
       this.loggerService.setLog(LogStatus.Error, '上傳Cookie失敗: 無法解析');
 
       await this.saveCookieHistory({ firstTime: true });
-      await this.saveCookie({ cookieId, mode, version: rqVersion });
+      // await this.saveCookie({ cookieId, mode, version: rqVersion });
 
       return 'fail';
     }
 
     // 檢查Cookie是否已存在
-    const cookie = await this.databaseService.getData({
-      type: Cookie,
-      filter: query =>
-        query.where({ cuser })
-    });
+    // const cookie = await this.databaseService.getData({
+    //   type: Cookie,
+    //   filter: query =>
+    //     query.where({ cuser })
+    // });
 
     const cookieHistory = await this.databaseService.getData({
       type: CookieHistory,
@@ -108,21 +108,21 @@ export class CookieService {
         query.where({ cuser })
     });
 
-    let firstTime = true;
-
     if (cookieHistory) {
       console.log('Cookie已存在');
 
-      cookieId = cookie.cookieId;
-      firstTime = false;
+      await this.saveCookieHistory({ cuser, firstTime: false });
+
+      return cookieId;
+
     }
 
-    await this.saveCookieHistory({ cuser, firstTime });
+    await this.saveCookieHistory({ cuser, firstTime: true });
 
     // 新增一筆Cookie
     await this.saveCookie({
       cookieId, mode, version: rqVersion,
-      cookieJson: JSON.tryStringify(cookieJson), cuser, fileName
+      cookieJson: JSON.tryStringify(cookieJson), cuser, fileName, isUsed: false
     })
 
     this.loggerService.logEnd(logId, { cookieId });
@@ -312,8 +312,9 @@ export class CookieService {
     cuser?: string;
     cookieJson?: string;
     fileName?: string;
+    isUsed: boolean;
   }): Promise<void> {
-    const { version, mode, cookieId, cuser, cookieJson, fileName } = args;
+    const { version, mode, cookieId, cuser, cookieJson, fileName, isUsed } = args;
 
     try {
       await new Cookie({
@@ -322,7 +323,7 @@ export class CookieService {
         cookieJson,
         folderName: fileName,
         version,
-        isUsed: false,
+        isUsed,
         status: cuser ? CookieStatus.Valid : CookieStatus.Invalid,
         mode,
         updatedTime: new Date()
