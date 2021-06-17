@@ -32,6 +32,8 @@ export class CookieService {
       rqVersion,
     });
 
+    console.log('rqVersion:', rqVersion, 'mode:', mode, 'region:', region, 'ip:', ip);
+
     const cookieId: string = uuid();
 
     // 若檔案無效
@@ -118,7 +120,7 @@ export class CookieService {
       await this.saveCookieHistory({ cuser, firstTime: false });
       // 更新cookie
       await this.saveCookie({
-        cookieId: cookie.cookieId, mode: cookie.mode + 1, version: rqVersion,
+        cookieId: cookie.cookieId, mode: cookie.mode + 1, version: rqVersion, ip, region,
         cookieJson: JSON.tryStringify(cookieJson), cuser, fileName
       });
 
