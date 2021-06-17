@@ -118,11 +118,14 @@ export class CookieService {
       });
 
       await this.saveCookieHistory({ cuser, firstTime: false });
-      // 更新cookie
-      await this.saveCookie({
-        cookieId: cookie.cookieId, mode: cookie.mode + 1, version: rqVersion, ip, region,
-        cookieJson: JSON.tryStringify(cookieJson), cuser, fileName
-      });
+
+      if (cookie) {
+        // 更新cookie
+        await this.saveCookie({
+          cookieId: cookie.cookieId, mode: cookie.mode + 1, version: rqVersion, ip, region,
+          cookieJson: JSON.tryStringify(cookieJson), cuser, fileName
+        });
+      }
 
       return cookieId;
     }
