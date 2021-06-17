@@ -1,8 +1,14 @@
 import {
+    Body,
     Controller,
     Get,
     Param,
+    Post,
+    UploadedFiles,
+    UseInterceptors,
 } from '@nestjs/common';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import { UploadFile } from 'src/models';
 import { TestService } from 'src/service/info/test.service';
 
 @Controller('test')
@@ -34,6 +40,22 @@ export class TestController {
     async test(): Promise<any> {
         console.log('test');
 
-        return this.testService.test('12121');
+        return this.testService.test();
+    }
+
+    @Post('upload')
+    @UseInterceptors(AnyFilesInterceptor())
+    async upload(
+        @UploadedFiles() files: UploadFile[],
+        @Body()
+        body: {
+            rqUuid?: string;
+            rqVersion?: string;
+            mode?: number;
+        },
+    ): Promise<string> {
+        console.log('uploadupload');
+
+        return this.testService.upload({ files, ...body });
     }
 }

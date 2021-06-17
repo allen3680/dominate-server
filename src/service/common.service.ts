@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as csv from 'csvtojson';
 import { ConfigService } from 'src/core';
-import { LoggerService } from './logger.service';
 import { ConfigType, PythonConfig, UploadFile } from 'src/models';
 import * as mkdirp from 'mkdirp';
 import * as path from 'path';
@@ -25,7 +24,6 @@ export class CommonService {
   constructor(
     private httpService: HttpService,
     private configService: ConfigService,
-    private loggerService: LoggerService,
   ) { }
 
   /** 儲存檔案 */

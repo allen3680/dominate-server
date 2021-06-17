@@ -35,8 +35,8 @@ export class CookieController {
 
   @Get()
   async getCookie(
-    @Query() req: { cookieId?: string, cuser?: string },
-  ): Promise<{ cookieId: string; cookie: string; createdTime: string } | string> {
+    @Query() req: { cuser: string },
+  ): Promise<{ new: number; trash?: number; cookie?: string; } | string> {
     return this.cookieService.getCookie(req);
   }
 

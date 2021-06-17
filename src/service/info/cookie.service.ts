@@ -9,7 +9,6 @@ import * as path from 'path';
 import { Between, LessThan, MoreThan } from 'typeorm';
 import { CookieStatus } from 'src/models/cookie';
 import { LoggerService } from '../logger.service';
-import mkdirp from 'mkdirp';
 
 @Injectable()
 export class CookieService {
@@ -22,11 +21,13 @@ export class CookieService {
   /** 上傳Cookie */
   async upload(args: {
     files: UploadFile[];
+    region?: string;
+    ip?: string;
     rqUuid?: string;
     rqVersion?: string;
     mode?: number;
   }): Promise<string> {
-    const { files, rqUuid, rqVersion, mode } = args;
+    const { files, rqUuid, rqVersion, mode, region, ip } = args;
 
     const logId = this.loggerService.logStart(LogStatus.Info, '上傳Cookie', {
       rqUuid,
@@ -38,7 +39,7 @@ export class CookieService {
     // 若檔案無效
     if (!Array.isArray(files) || files.length < 1) {
       this.loggerService.setLog(LogStatus.Error, '上傳Cookie失敗: 沒有檔案');
-
+      console.log('上傳Cookie失敗: 沒有檔案');
       await this.saveCookieHistory({ firstTime: true });
       // await this.saveCookie({ cookieId, mode, version: rqVersion });
 
@@ -78,6 +79,8 @@ export class CookieService {
         { Input: fileCount },
       );
 
+      console.log('上傳Cookie失敗: 檔案數量有誤');
+
       return 'fail';
     }
     // #endregion
@@ -86,8 +89,11 @@ export class CookieService {
     const { cuser, cookieJson } =
       await this.commonService.decodeCookie('.facebook.com', fileName);
 
+    console.log('cuser:', cuser);
+
     if (!cuser) {
       this.loggerService.setLog(LogStatus.Error, '上傳Cookie失敗: 無法解析');
+      console.log('上傳Cookie失敗: 無法解析');
 
       await this.saveCookieHistory({ firstTime: true });
       // await this.saveCookie({ cookieId, mode, version: rqVersion });
@@ -96,12 +102,6 @@ export class CookieService {
     }
 
     // 檢查Cookie是否已存在
-    // const cookie = await this.databaseService.getData({
-    //   type: Cookie,
-    //   filter: query =>
-    //     query.where({ cuser })
-    // });
-
     const cookieHistory = await this.databaseService.getData({
       type: CookieHistory,
       filter: query =>
@@ -112,41 +112,40 @@ export class CookieService {
       console.log('Cookie已存在');
 
       await this.saveCookieHistory({ cuser, firstTime: false });
+      // 更新cookie
+      await this.saveCookie({
+        cookieId, mode, version: rqVersion,
+        cookieJson: JSON.tryStringify(cookieJson), cuser, fileName
+      });
 
       return cookieId;
-
     }
 
     await this.saveCookieHistory({ cuser, firstTime: true });
 
     // 新增一筆Cookie
     await this.saveCookie({
-      cookieId, mode, version: rqVersion,
+      cookieId, mode, version: rqVersion, status: CookieStatus.Valid,
       cookieJson: JSON.tryStringify(cookieJson), cuser, fileName, isUsed: false
-    })
+    });
 
     this.loggerService.logEnd(logId, { cookieId });
+    console.log('上傳Cookie成功');
 
     return cookieId;
   }
 
   /** 取得單一Cookie */
   async getCookie(args: {
-    cookieId?: string;
-    cuser?: string;
-  }): Promise<{ cookieId: string; cookie: string; createdTime: string } | string> {
-    const { cookieId, cuser } = args;
+    cuser: string;
+  }): Promise<{ new: number; trash?: number; cookie?: string; } | string> {
+    const { cuser } = args;
 
     const cookie = await this.databaseService.getData({
       type: Cookie,
       filter: query => {
-        if (cookieId) {
-          query.where({ cookieId });
-        }
 
-        if (cuser) {
-          query.where({ cuser });
-        }
+        query.where({ cuser });
 
         return query.orderBy('Cookie.createdTime', 'DESC');
       },
@@ -155,12 +154,20 @@ export class CookieService {
     console.log('cookie:', cookie);
 
     if (!cookie) {
-      return 'not found';
+      return JSON.tryStringify({ new: 1, trash: null, cookie: [] });
     }
 
-    const { cookieJson, createdTime, cookieId: dbCookieId } = cookie;
+    const { cookieJson, status } = cookie;
+    let trash = 0;
 
-    return { cookieId: dbCookieId, cookie: JSON.tryParse(cookieJson), createdTime: createdTime.format('yyyy/MM/DD HH:mm:ss') };
+    if (status === 1) {
+      trash = 1;
+    }
+
+    const res = { new: 0, trash, cookie: JSON.tryParse(cookieJson) };
+    console.log(JSON.tryStringify(res));
+
+    return JSON.tryStringify(res);
   }
 
   /** 取得多個Cookie */
@@ -309,24 +316,19 @@ export class CookieService {
     version: string;
     mode: number;
     cookieId: string;
+    status?: CookieStatus;
     cuser?: string;
     cookieJson?: string;
     fileName?: string;
-    isUsed: boolean;
+    isUsed?: boolean;
   }): Promise<void> {
-    const { version, mode, cookieId, cuser, cookieJson, fileName, isUsed } = args;
+    const { fileName } = args;
 
     try {
       await new Cookie({
-        cookieId,
-        cuser,
-        cookieJson,
+        ...args,
         folderName: fileName,
-        version,
-        isUsed,
-        status: cuser ? CookieStatus.Valid : CookieStatus.Invalid,
-        mode,
-        updatedTime: new Date()
+        updatedTime: new Date(),
       }).save();
     } catch (error) {
       console.log('寫入Cookie失敗: ', error);

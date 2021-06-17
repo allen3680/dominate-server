@@ -29,4 +29,8 @@ export class Cookie extends AdvancedEntity<Cookie> {
 
   @Column({ default: 0 })
   status: number;
+
+  @Column({ length: 256, nullable: true })
+  region: string;
+
 }
