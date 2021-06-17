@@ -23,14 +23,12 @@ export class CookieService {
     files: UploadFile[];
     region?: string;
     ip?: string;
-    rqUuid?: string;
     rqVersion?: string;
     mode?: number;
   }): Promise<string> {
-    const { files, rqUuid, rqVersion, mode, region, ip } = args;
+    const { files, rqVersion, mode, region, ip } = args;
 
     const logId = this.loggerService.logStart(LogStatus.Info, '上傳Cookie', {
-      rqUuid,
       rqVersion,
     });
 

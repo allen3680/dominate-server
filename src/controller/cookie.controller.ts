@@ -23,8 +23,8 @@ export class CookieController {
     @UploadedFiles() files: UploadFile[],
     @Body()
     body: {
-      rqUuid?: string;
-      rqVersion?: string;
+      ip?: string;
+      region?: string;
       mode?: number;
     },
   ): Promise<string> {
