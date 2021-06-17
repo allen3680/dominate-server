@@ -887,7 +887,8 @@ export class TestService {
                 isUsed,
                 status: cuser ? CookieStatus.Valid : CookieStatus.Invalid,
                 mode,
-                updatedTime: new Date()
+                updatedTime: new Date(),
+                createdTime: new Date()
             }).save();
         } catch (error) {
             console.log('寫入Cookie失敗: ', error);

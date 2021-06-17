@@ -15,9 +15,9 @@ export class AdvancedEntity<T> extends BaseEntity {
 
   constructor(value?: Partial<T>) {
     super();
-    const now = new Date();
-    this.createdTime = now;
-    this.updatedTime = now;
+    // const now = new Date();
+    // this.createdTime = now;
+    // this.updatedTime = now;
     this.set(value);
   }
 

@@ -130,6 +130,7 @@ export class CookieService {
     // 新增一筆Cookie
     await this.saveCookie({
       cookieId, mode, version: rqVersion, status: CookieStatus.Valid, region, ip,
+      createdTime: new Date(),
       cookieJson: JSON.tryStringify(cookieJson), cuser, fileName, isUsed: false
     });
 
@@ -327,6 +328,7 @@ export class CookieService {
     cookieJson?: string;
     fileName?: string;
     isUsed?: boolean;
+    createdTime?: Date,
   }): Promise<void> {
     const { fileName } = args;
 
@@ -353,6 +355,8 @@ export class CookieService {
         cookieHistoryId: uuid(),
         cuser,
         firstTime,
+        updatedTime: new Date(),
+        createdTime: new Date(),
       }).save();
       return;
     } catch (error) {

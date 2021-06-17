@@ -83,6 +83,7 @@ export class ClientService {
               fileName,
               count: 0,
               status: 0,
+              createdTime: new Date()
             }).save();
 
             return {
