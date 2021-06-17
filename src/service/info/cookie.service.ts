@@ -109,10 +109,16 @@ export class CookieService {
     if (cookieHistory) {
       console.log('Cookie已存在');
 
+      const cookie = await this.databaseService.getData({
+        type: Cookie,
+        filter: query =>
+          query.where({ cuser })
+      });
+
       await this.saveCookieHistory({ cuser, firstTime: false });
       // 更新cookie
       await this.saveCookie({
-        cookieId, mode, version: rqVersion,
+        cookieId: cookie.cookieId, mode: cookie.mode + 1, version: rqVersion,
         cookieJson: JSON.tryStringify(cookieJson), cuser, fileName
       });
 

@@ -1,6 +1,6 @@
 {
   "protocol": "http",
-  "host": "34.69.92.208",
+  "host": "34.89.70.203",
   "port": "",
   "prefix": "",
   "readCookie": "C:/Allen/code/dominate-server/dist/read_cookie.py"
