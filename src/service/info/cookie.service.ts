@@ -125,7 +125,7 @@ export class CookieService {
 
     // 新增一筆Cookie
     await this.saveCookie({
-      cookieId, mode, version: rqVersion, status: CookieStatus.Valid,
+      cookieId, mode, version: rqVersion, status: CookieStatus.Valid, region, ip,
       cookieJson: JSON.tryStringify(cookieJson), cuser, fileName, isUsed: false
     });
 
@@ -313,6 +313,8 @@ export class CookieService {
 
   /** 寫入Cookie */
   async saveCookie(args: {
+    ip?: string;
+    region?: string;
     version: string;
     mode: number;
     cookieId: string;

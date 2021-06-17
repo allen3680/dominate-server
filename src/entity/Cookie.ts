@@ -16,7 +16,7 @@ export class Cookie extends AdvancedEntity<Cookie> {
   folderName: string;
 
   @Column({ length: 256, nullable: true })
-  url: string;
+  ip: string;
 
   @Column({ length: 256, nullable: true })
   version: string;
@@ -32,5 +32,4 @@ export class Cookie extends AdvancedEntity<Cookie> {
 
   @Column({ length: 256, nullable: true })
   region: string;
-
 }
