@@ -185,7 +185,10 @@ export class CookieService {
     startDate: Date;
     endDate: Date;
   }): Promise<{
-    total: number, valid: number, invalid: number, newCookies: number, oldCookies: number, totalWithoutOld: number
+    total: number, valid: number, invalid: number,
+    newCookies: number, oldCookies: number,
+    totalWithoutOld: number,
+    region: { [region: string]: number },
     list: { cookieId: string; cookie: string; createdTime: string }[]
   }> {
     const { startDate, endDate } = args;
@@ -241,13 +244,27 @@ export class CookieService {
       return {
         total, valid, invalid,
         newCookies, oldCookies, totalWithoutOld,
+        region: {},
         list: []
       };
     }
 
+    const regions: { [region: string]: number } = {};
+    cookies.forEach(cookie => {
+      const { region } = cookie;
+      if (!region) {
+        return;
+      } else if (regions[region]) {
+        regions[region] += 1;
+      } else {
+        regions[region] = 1;
+      }
+    });
+
     return {
       total, valid, invalid,
       newCookies, oldCookies, totalWithoutOld,
+      region: regions,
       list: cookies.map(
         ({ cookieId, cookieJson, createdTime }) =>
           ({ cookieId, cookie: JSON.tryParse(cookieJson), createdTime: createdTime.format('yyyy/MM/DD HH:mm:ss') })
