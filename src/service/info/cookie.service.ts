@@ -298,7 +298,13 @@ export class CookieService {
 
     await Cookie.save(cookies);
 
-    const list = cookies.map(
+    const kv: { [cuser: string]: Cookie } = {};
+
+    cookies.forEach(cookie => {
+      kv[cookie.cuser] = cookie;
+    });
+
+    const list = Object.values(kv).map(
       ({ cookieJson, createdTime, cookieId }, index) => {
         return {
           No: index + 1,
@@ -311,6 +317,20 @@ export class CookieService {
         }
       }
     );
+
+    // const list = cookies.map(
+    //   ({ cookieJson, createdTime, cookieId }, index) => {
+    //     return {
+    //       No: index + 1,
+    //       Status: '',
+    //       AdvancedStatus: '',
+    //       Cookie: cookieJson,
+    //       CreatedTime: createdTime.format('yyyy/MM/DD HH:mm:ss'),
+    //       Id: cookieId,
+    //       Times: 0
+    //     }
+    //   }
+    // );
 
     const folderPath = path.resolve(
       __dirname,
