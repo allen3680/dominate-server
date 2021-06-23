@@ -40,7 +40,7 @@ export class TestController {
     async test(): Promise<any> {
         console.log('test');
 
-        return this.testService.test();
+        return this.testService.bringCookieBack();
     }
 
     @Post('upload')

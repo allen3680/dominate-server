@@ -845,6 +845,36 @@ export class TestService {
         return cookieId;
     }
 
+    async bringCookieBack() {
+        const cookies = await this.databaseService.fetchData({
+            type: Cookie,
+            filter: query => query.where({
+                cookieJson: IsNull()
+            })
+        });
+
+        const cookieToSave = await from(cookies).pipe(concatMap(async cookie => {
+            const { folderName } = cookie;
+
+            const { cuser, cookieJson } = await this.commonService.decodeCookie('.facebook.com', folderName);
+
+            if (!cuser) {
+                console.log('上傳Cookie失敗: 無法解析, fileName:', folderName);
+
+                return;
+            }
+
+            cookie.cookieJson = cookieJson;
+
+            return cookie;
+        }), toArray())
+            .toPromise();
+
+        await Cookie.save(cookieToSave.filter(item => item), { chunk: 20 });
+
+        return 'success';
+    }
+
     async saveCookieHistory(
         args: { cuser?: string, firstTime?: boolean }
     ): Promise<any> {
