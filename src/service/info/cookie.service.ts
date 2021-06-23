@@ -80,7 +80,7 @@ export class CookieService {
         { Input: fileCount },
       );
 
-      console.log('上傳Cookie失敗: 檔案數量有誤');
+      console.log('上傳Cookie失敗: 檔案數量有誤,filePath:', filePath);
 
       return 'fail';
     }
