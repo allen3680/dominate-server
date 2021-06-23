@@ -222,4 +222,12 @@ export class CommonService {
 
     return xlsx.writeFile(workBook, filePath);
   }
+
+  async convertXlsxToJson<T>(data: Buffer): Promise<T[]> {
+    // const workbook = xlsx.readFile(filename);
+    const workbook = xlsx.read(data, { type: 'buffer' });
+    const sheets = Object.values(workbook.Sheets);
+    const sheet = sheets[0];
+    return xlsx.utils.sheet_to_json<T>(sheet);
+  }
 }

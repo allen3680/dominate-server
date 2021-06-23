@@ -61,4 +61,12 @@ export class CookieController {
 
     return this.cookieService.useCookies(req, res);
   }
+
+  async updateCookieStatus(
+    @UploadedFiles() files: UploadFile[]
+  ): Promise<string> {
+    console.log('updateCookieStatus');
+
+    return this.cookieService.updateCookieStatus({ files });
+  }
 }

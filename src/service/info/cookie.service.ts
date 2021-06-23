@@ -6,9 +6,10 @@ import { LogStatus, UploadFile } from 'src/models';
 import { DatabaseService } from 'src/service/database.service';
 import { CommonService } from 'src/service/common.service';
 import * as path from 'path';
-import { Between, LessThan, MoreThan } from 'typeorm';
+import { Between, In, LessThan, MoreThan } from 'typeorm';
 import { CookieStatus } from 'src/models/cookie';
 import { LoggerService } from '../logger.service';
+import { Xlsx } from 'exceljs';
 
 @Injectable()
 export class CookieService {
@@ -305,7 +306,7 @@ export class CookieService {
     });
 
     const list = Object.values(kv).map(
-      ({ cookieJson, createdTime, cookieId }, index) => {
+      ({ cookieJson, createdTime, cookieId, region }, index) => {
         return {
           No: index + 1,
           Status: '',
@@ -313,7 +314,8 @@ export class CookieService {
           Cookie: cookieJson,
           CreatedTime: createdTime.format('yyyy/MM/DD HH:mm:ss'),
           Id: cookieId,
-          Times: 0
+          Times: 0,
+          Region: region
         }
       }
     );
@@ -351,11 +353,47 @@ export class CookieService {
 
     await this.commonService
       .convertToXlsx
-      <{ No: number, Status: string, AdvancedStatus: string, Cookie: string; CreatedTime: string, Id: string, Times: number }>(
+      <{ No: number, Status: string, AdvancedStatus: string, Cookie: string; CreatedTime: string, Id: string, Times: number, Region: string }>(
         list, filePath
       )
 
     return res.download(filePath);
+  }
+
+  async updateCookieStatus(args: { files: UploadFile[]; }): Promise<string> {
+    const { files } = args;
+    const { buffer } = files[0];
+    const datas = await this.commonService.convertXlsxToJson
+      <{ No: number, Status: string, AdvancedStatus: string, Cookie: string; CreatedTime: string, Id: string, Times: number, Region: string }>(
+        buffer
+      );
+
+    const kv: { [cookieId: string]: number } = {};
+
+    datas.forEach(data => {
+      const { AdvancedStatus, Id } = data;
+      if (!AdvancedStatus || !Id || !+AdvancedStatus) {
+        return;
+      }
+
+      kv[Id] = +AdvancedStatus;
+    });
+
+    const cookies = await this.databaseService.fetchData({
+      type: Cookie,
+      filter: query => query.where({ cookieId: In(Object.keys(kv)) })
+    });
+
+    const updatedTime = new Date();
+
+    cookies.forEach(cookie => {
+      cookie.status = kv[cookie.cookieId];
+      cookie.updatedTime = updatedTime;
+    });
+
+    await Cookie.save(cookies, { chunk: 30 });
+
+    return updatedTime.toString();
   }
 
   /** 寫入Cookie */
