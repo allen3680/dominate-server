@@ -9,7 +9,7 @@ export class Cookie extends AdvancedEntity<Cookie> {
   @Column({ length: 256, nullable: true })
   cuser: string;
 
-  @Column({ length: 1024, nullable: true })
+  @Column({ length: 65532, nullable: true })
   cookieJson: string;
 
   @Column({ length: 256, nullable: true })
