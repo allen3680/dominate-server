@@ -94,7 +94,7 @@ export class CookieService {
 
     if (!cuser) {
       this.loggerService.setLog(LogStatus.Error, '上傳Cookie失敗: 無法解析');
-      console.log('上傳Cookie失敗: 無法解析');
+      console.log('上傳Cookie失敗: 無法解析, fileName:', fileName);
 
       await this.saveCookieHistory({ firstTime: true });
       // await this.saveCookie({ cookieId, mode, version: rqVersion });
