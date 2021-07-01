@@ -3,6 +3,7 @@ import { ConfigService } from 'src/core';
 import { CommonService, DatabaseService, LoggerService } from 'src/service';
 import { CookieService } from 'src/service/info/cookie.service';
 import { ClientService } from './info/client.service';
+import { MiningService } from './info/mining.service';
 import { TestService } from './info/test.service';
 
 @Global()
@@ -19,6 +20,7 @@ import { TestService } from './info/test.service';
     CommonService,
     CookieService,
     ClientService,
+    MiningService,
     TestService,
   ],
   exports: [
@@ -27,7 +29,8 @@ import { TestService } from './info/test.service';
     CommonService,
     CookieService,
     ClientService,
-    TestService
+    MiningService,
+    TestService,
   ],
 })
 export class ServiceModule { }

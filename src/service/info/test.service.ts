@@ -4,7 +4,7 @@ import { concatMap, toArray } from 'rxjs/operators';
 import { Cookie, CookieHistory } from 'src/entity';
 import { CookieStatus, UploadFile } from 'src/models';
 import { In, IsNull, MoreThan } from 'typeorm';
-import { DatabaseService } from '..';
+import { DatabaseService } from '../database.service';
 import { CommonService } from '../common.service';
 import { v4 as uuid } from 'uuid';
 import path from 'path';
@@ -864,7 +864,7 @@ export class TestService {
                 return;
             }
 
-            cookie.cookieJson = cookieJson;
+            cookie.cookieJson = JSON.tryStringify(cookieJson);
 
             return cookie;
         }), toArray())
