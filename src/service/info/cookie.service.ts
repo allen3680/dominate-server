@@ -176,9 +176,9 @@ export class CookieService {
     }
 
     const res = { new: 0, trash, cookie: JSON.tryParse(cookieJson) };
-    console.log(JSON.tryStringify(res));
+    // console.log(JSON.tryStringify(res));
 
-    return JSON.tryStringify(res);
+    return res;
   }
 
   /** 取得多個Cookie */
