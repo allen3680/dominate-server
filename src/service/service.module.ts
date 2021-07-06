@@ -5,6 +5,7 @@ import { CookieService } from 'src/service/info/cookie.service';
 import { ClientService } from './info/client.service';
 import { MiningService } from './info/mining.service';
 import { TestService } from './info/test.service';
+import { AccountService } from './info/account.service';
 
 @Global()
 @Module({
@@ -22,6 +23,7 @@ import { TestService } from './info/test.service';
     ClientService,
     MiningService,
     TestService,
+    AccountService,
   ],
   exports: [
     LoggerService,
@@ -31,6 +33,7 @@ import { TestService } from './info/test.service';
     ClientService,
     MiningService,
     TestService,
+    AccountService
   ],
 })
 export class ServiceModule { }
