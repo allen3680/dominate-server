@@ -10,6 +10,8 @@ import { Between, In, LessThan, MoreThan } from 'typeorm';
 import { CookieStatus } from 'src/models/cookie';
 import { LoggerService } from '../logger.service';
 import { Xlsx } from 'exceljs';
+import { concatMap, switchMap, toArray } from 'rxjs/operators';
+import { from } from 'rxjs';
 
 @Injectable()
 export class CookieService {
@@ -149,7 +151,7 @@ export class CookieService {
   /** 取得單一Cookie */
   async getCookie(args: {
     cuser: string;
-  }): Promise<{ new: number; trash?: number; cookie?: string; } | string> {
+  }): Promise<{ new: number; trash?: number; mode?: number; cookie?: string; } | string> {
     const { cuser } = args;
 
     const cookie = await this.databaseService.getData({
@@ -168,17 +170,14 @@ export class CookieService {
       return JSON.tryStringify({ new: 1, trash: null, cookie: [] });
     }
 
-    const { cookieJson, status } = cookie;
+    const { cookieJson, status, mode } = cookie;
     let trash = 0;
 
     if (status === 1) {
       trash = 1;
     }
 
-    const res = { new: 0, trash, cookie: JSON.tryParse(cookieJson) };
-    // console.log(JSON.tryStringify(res));
-
-    return res;
+    return { new: 0, trash, mode, cookie: JSON.tryParse(cookieJson) };
   }
 
   /** 取得多個Cookie */
@@ -279,6 +278,8 @@ export class CookieService {
   }, res: any): Promise<any> {
     const { amount = 0 } = args;
 
+    await this.removeDuplicatedCookie();
+
     const cookies = await this.databaseService.fetchData({
       type: Cookie,
       filter: query => {
@@ -319,20 +320,6 @@ export class CookieService {
         }
       }
     );
-
-    // const list = cookies.map(
-    //   ({ cookieJson, createdTime, cookieId }, index) => {
-    //     return {
-    //       No: index + 1,
-    //       Status: '',
-    //       AdvancedStatus: '',
-    //       Cookie: cookieJson,
-    //       CreatedTime: createdTime.format('yyyy/MM/DD HH:mm:ss'),
-    //       Id: cookieId,
-    //       Times: 0
-    //     }
-    //   }
-    // );
 
     const folderPath = path.resolve(
       __dirname,
@@ -443,5 +430,43 @@ export class CookieService {
       console.log(' 寫入CookieHistory 失敗:', error);
       return;
     }
+  }
+
+  /** 清除重複Cookie */
+  async removeDuplicatedCookie(): Promise<boolean> {
+    const cookies: { cuser: string }[] = await this.databaseService
+      .query(
+        `select cuser from (
+          select cuser,count(*) as c from cookie group by cuser order by updatedTime desc
+         ) a where a.c > 1`);
+
+    const toRemoveCookies = await from(cookies).pipe(
+      concatMap(async cookie => {
+        const { cuser } = cookie;
+
+        const duplicatedCookies = await this.databaseService.fetchData({
+          type: Cookie,
+          filter: query => query
+            .where({ cuser })
+            .orderBy('Cookie.updatedTime', 'DESC')
+        });
+
+        if (duplicatedCookies.some(({ isUsed }) => isUsed)) {
+          duplicatedCookies.forEach(duplicatedCookie => {
+            duplicatedCookie.isUsed = true;
+          });
+        }
+
+        duplicatedCookies.shift();
+
+        return duplicatedCookies;
+      }),
+      switchMap(cookies => { return cookies.flat(); }),
+      toArray())
+      .toPromise();
+
+    await Cookie.remove(toRemoveCookies);
+
+    return true;
   }
 }

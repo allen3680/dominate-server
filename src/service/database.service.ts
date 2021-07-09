@@ -5,13 +5,14 @@ import { IsolationLevel } from 'src/plugins';
 import {
   BaseEntity,
   Connection,
+  QueryRunner,
   SelectQueryBuilder,
   TransactionQueryRunner,
 } from 'typeorm';
 
 @Injectable()
 export class DatabaseService {
-  constructor(private connection: Connection) {}
+  constructor(private connection: Connection) { }
 
   async createTransactionQueryRunner(
     isolationLevel = IsolationLevel.Serializable,
@@ -133,6 +134,10 @@ export class DatabaseService {
       }
       return column;
     });
+  }
+
+  async query(query: string, parameters?: any[], queryRunner?: QueryRunner): Promise<any> {
+    return this.connection.query(query, parameters, queryRunner);
   }
 
   /** 建立SelectQueryBuilder，並組好條件再回傳SelectQueryBuilder */
