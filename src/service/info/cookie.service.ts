@@ -429,15 +429,11 @@ export class CookieService {
       cookie.updatedTime = updatedTime;
     });
 
-    console.log(
-      cookies.map(cookie => {
-        cookie.cuser, cookie.status, cookie.updatedTime;
-      }),
-    );
+    console.log(cookies.length, updatedTime);
 
-    // await Cookie.save(cookies, { chunk: 30 });
+    await Cookie.save(cookies, { chunk: 30 });
 
-    return updatedTime.toString();
+    return updatedTime.format('yyyy/MM/DD HH:mm:ss.sss');
   }
 
   /** 寫入Cookie */

@@ -70,6 +70,7 @@ export class CookieController {
   }
 
   @Post('update')
+  @UseInterceptors(AnyFilesInterceptor())
   async updateCookieStatus(
     @UploadedFiles() files: UploadFile[],
   ): Promise<string> {
