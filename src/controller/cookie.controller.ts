@@ -15,7 +15,7 @@ import { CookieService } from 'src/service/info/cookie.service';
 
 @Controller('cookie')
 export class CookieController {
-  constructor(private cookieService: CookieService) { }
+  constructor(private cookieService: CookieService) {}
 
   @Post('upload')
   @UseInterceptors(AnyFilesInterceptor())
@@ -36,7 +36,9 @@ export class CookieController {
   @Get()
   async getCookie(
     @Query() req: { cuser: string },
-  ): Promise<{ new: number; trash?: number; mode?: number; cookie?: string; } | string> {
+  ): Promise<
+    { new: number; trash?: number; mode?: number; cookie?: string } | string
+  > {
     return this.cookieService.getCookie(req);
   }
 
@@ -44,8 +46,13 @@ export class CookieController {
   async fetchCookie(
     @Query() req: { startDate: Date; endDate: Date },
   ): Promise<{
-    total: number, valid: number, invalid: number, newCookies: number, oldCookies: number, totalWithoutOld: number
-    list: { cookieId: string; cookie: string; createdTime: string }[]
+    total: number;
+    valid: number;
+    invalid: number;
+    newCookies: number;
+    oldCookies: number;
+    totalWithoutOld: number;
+    list: { cookieId: string; cookie: string; createdTime: string }[];
   }> {
     console.log('fetchCookie');
 
@@ -62,8 +69,9 @@ export class CookieController {
     return this.cookieService.useCookies(req, res);
   }
 
+  @Post('update')
   async updateCookieStatus(
-    @UploadedFiles() files: UploadFile[]
+    @UploadedFiles() files: UploadFile[],
   ): Promise<string> {
     console.log('updateCookieStatus');
 

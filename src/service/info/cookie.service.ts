@@ -19,7 +19,7 @@ export class CookieService {
     private databaseService: DatabaseService,
     private commonService: CommonService,
     private loggerService: LoggerService,
-  ) { }
+  ) {}
 
   /** 上傳Cookie */
   async upload(args: {
@@ -35,7 +35,16 @@ export class CookieService {
       rqVersion,
     });
 
-    console.log('rqVersion:', rqVersion, 'mode:', mode, 'region:', region, 'ip:', ip);
+    console.log(
+      'rqVersion:',
+      rqVersion,
+      'mode:',
+      mode,
+      'region:',
+      region,
+      'ip:',
+      ip,
+    );
 
     const cookieId: string = uuid();
 
@@ -89,8 +98,10 @@ export class CookieService {
     // #endregion
 
     // 解析Cookie
-    const { cuser, cookieJson } =
-      await this.commonService.decodeCookie('.facebook.com', fileName);
+    const { cuser, cookieJson } = await this.commonService.decodeCookie(
+      '.facebook.com',
+      fileName,
+    );
 
     console.log('cuser:', cuser);
 
@@ -107,8 +118,7 @@ export class CookieService {
     // 檢查Cookie是否已存在
     const cookieHistory = await this.databaseService.getData({
       type: CookieHistory,
-      filter: query =>
-        query.where({ cuser })
+      filter: query => query.where({ cuser }),
     });
 
     if (cookieHistory) {
@@ -116,8 +126,7 @@ export class CookieService {
 
       const cookie = await this.databaseService.getData({
         type: Cookie,
-        filter: query =>
-          query.where({ cuser })
+        filter: query => query.where({ cuser }),
       });
 
       await this.saveCookieHistory({ cuser, firstTime: false });
@@ -125,8 +134,14 @@ export class CookieService {
       if (cookie) {
         // 更新cookie
         await this.saveCookie({
-          cookieId: cookie.cookieId, mode: cookie.mode + 1, version: rqVersion, ip, region,
-          cookieJson: JSON.tryStringify(cookieJson), cuser, fileName
+          cookieId: cookie.cookieId,
+          mode: cookie.mode + 1,
+          version: rqVersion,
+          ip,
+          region,
+          cookieJson: JSON.tryStringify(cookieJson),
+          cuser,
+          fileName,
         });
       }
 
@@ -137,9 +152,17 @@ export class CookieService {
 
     // 新增一筆Cookie
     await this.saveCookie({
-      cookieId, mode, version: rqVersion, status: CookieStatus.Valid, region, ip,
+      cookieId,
+      mode,
+      version: rqVersion,
+      status: CookieStatus.Valid,
+      region,
+      ip,
       createdTime: new Date(),
-      cookieJson: JSON.tryStringify(cookieJson), cuser, fileName, isUsed: false
+      cookieJson: JSON.tryStringify(cookieJson),
+      cuser,
+      fileName,
+      isUsed: false,
     });
 
     this.loggerService.logEnd(logId, { cookieId });
@@ -151,13 +174,14 @@ export class CookieService {
   /** 取得單一Cookie */
   async getCookie(args: {
     cuser: string;
-  }): Promise<{ new: number; trash?: number; mode?: number; cookie?: string; } | string> {
+  }): Promise<
+    { new: number; trash?: number; mode?: number; cookie?: string } | string
+  > {
     const { cuser } = args;
 
     const cookie = await this.databaseService.getData({
       type: Cookie,
       filter: query => {
-
         query.where({ cuser });
 
         return query.orderBy('Cookie.createdTime', 'DESC');
@@ -185,11 +209,14 @@ export class CookieService {
     startDate: Date;
     endDate: Date;
   }): Promise<{
-    total: number, valid: number, invalid: number,
-    newCookies: number, oldCookies: number,
-    totalWithoutOld: number,
-    region: { [region: string]: number },
-    list: { cookieId: string; cookie: string; createdTime: string }[]
+    total: number;
+    valid: number;
+    invalid: number;
+    newCookies: number;
+    oldCookies: number;
+    totalWithoutOld: number;
+    region: { [region: string]: number };
+    list: { cookieId: string; cookie: string; createdTime: string }[];
   }> {
     const { startDate, endDate } = args;
 
@@ -236,16 +263,21 @@ export class CookieService {
     const total = cookieHistory.length;
     const invalid = cookieHistory.filter(({ cuser }) => !cuser).length;
     const valid = total - invalid;
-    const oldCookies = cookieHistory.filter(({ firstTime }) => !firstTime).length;
+    const oldCookies = cookieHistory.filter(({ firstTime }) => !firstTime)
+      .length;
     const newCookies = total - oldCookies - invalid;
     const totalWithoutOld = total - oldCookies;
 
     if (!Array.isArray(cookies) || cookies.length < 1) {
       return {
-        total, valid, invalid,
-        newCookies, oldCookies, totalWithoutOld,
+        total,
+        valid,
+        invalid,
+        newCookies,
+        oldCookies,
+        totalWithoutOld,
         region: {},
-        list: []
+        list: [],
       };
     }
 
@@ -262,20 +294,28 @@ export class CookieService {
     });
 
     return {
-      total, valid, invalid,
-      newCookies, oldCookies, totalWithoutOld,
+      total,
+      valid,
+      invalid,
+      newCookies,
+      oldCookies,
+      totalWithoutOld,
       region: regions,
-      list: cookies.map(
-        ({ cookieId, cookieJson, createdTime }) =>
-          ({ cookieId, cookie: JSON.tryParse(cookieJson), createdTime: createdTime.format('yyyy/MM/DD HH:mm:ss') })
-      )
+      list: cookies.map(({ cookieId, cookieJson, createdTime }) => ({
+        cookieId,
+        cookie: JSON.tryParse(cookieJson),
+        createdTime: createdTime.format('yyyy/MM/DD HH:mm:ss'),
+      })),
     };
   }
 
   /** 使用多個Cookie */
-  async useCookies(args: {
-    amount: number;
-  }, res: any): Promise<any> {
+  async useCookies(
+    args: {
+      amount: number;
+    },
+    res: any,
+  ): Promise<any> {
     const { amount = 0 } = args;
 
     await this.removeDuplicatedCookie();
@@ -296,7 +336,7 @@ export class CookieService {
     cookies.map(cookie => {
       cookie.isUsed = true;
       cookie.updatedTime = new Date();
-    })
+    });
 
     await Cookie.save(cookies);
 
@@ -316,9 +356,9 @@ export class CookieService {
           CreatedTime: createdTime.format('yyyy/MM/DD HH:mm:ss'),
           Id: cookieId,
           Times: 0,
-          Region: region
-        }
-      }
+          Region: region,
+        };
+      },
     );
 
     const folderPath = path.resolve(
@@ -328,32 +368,43 @@ export class CookieService {
       '..',
       '..',
       'uploads',
-      'cookieCsv'
+      'cookieCsv',
     );
 
     // await mkdirp(folderPath);
 
     const filePath = path.resolve(
       folderPath,
-      `Cookie_${new Date().format('yyyyMMDD')}.xlsx`
+      `Cookie_${new Date().format('yyyyMMDD')}.xlsx`,
     );
 
-    await this.commonService
-      .convertToXlsx
-      <{ No: number, Status: string, AdvancedStatus: string, Cookie: string; CreatedTime: string, Id: string, Times: number, Region: string }>(
-        list, filePath
-      )
+    await this.commonService.convertToXlsx<{
+      No: number;
+      Status: string;
+      AdvancedStatus: string;
+      Cookie: string;
+      CreatedTime: string;
+      Id: string;
+      Times: number;
+      Region: string;
+    }>(list, filePath);
 
     return res.download(filePath);
   }
 
-  async updateCookieStatus(args: { files: UploadFile[]; }): Promise<string> {
+  async updateCookieStatus(args: { files: UploadFile[] }): Promise<string> {
     const { files } = args;
     const { buffer } = files[0];
-    const datas = await this.commonService.convertXlsxToJson
-      <{ No: number, Status: string, AdvancedStatus: string, Cookie: string; CreatedTime: string, Id: string, Times: number, Region: string }>(
-        buffer
-      );
+    const datas = await this.commonService.convertXlsxToJson<{
+      No: number;
+      Status: string;
+      AdvancedStatus: string;
+      Cookie: string;
+      CreatedTime: string;
+      Id: string;
+      Times: number;
+      Region: string;
+    }>(buffer);
 
     const kv: { [cookieId: string]: number } = {};
 
@@ -368,7 +419,7 @@ export class CookieService {
 
     const cookies = await this.databaseService.fetchData({
       type: Cookie,
-      filter: query => query.where({ cookieId: In(Object.keys(kv)) })
+      filter: query => query.where({ cookieId: In(Object.keys(kv)) }),
     });
 
     const updatedTime = new Date();
@@ -378,7 +429,13 @@ export class CookieService {
       cookie.updatedTime = updatedTime;
     });
 
-    await Cookie.save(cookies, { chunk: 30 });
+    console.log(
+      cookies.map(cookie => {
+        cookie.cuser, cookie.status, cookie.updatedTime;
+      }),
+    );
+
+    // await Cookie.save(cookies, { chunk: 30 });
 
     return updatedTime.toString();
   }
@@ -395,7 +452,7 @@ export class CookieService {
     cookieJson?: string;
     fileName?: string;
     isUsed?: boolean;
-    createdTime?: Date,
+    createdTime?: Date;
   }): Promise<void> {
     const { fileName } = args;
 
@@ -413,9 +470,10 @@ export class CookieService {
   }
 
   /** 寫入CookieHistory */
-  async saveCookieHistory(
-    args: { cuser?: string, firstTime?: boolean }
-  ): Promise<any> {
+  async saveCookieHistory(args: {
+    cuser?: string;
+    firstTime?: boolean;
+  }): Promise<any> {
     const { cuser, firstTime } = args;
     try {
       await new CookieHistory({
@@ -434,35 +492,38 @@ export class CookieService {
 
   /** 清除重複Cookie */
   async removeDuplicatedCookie(): Promise<boolean> {
-    const cookies: { cuser: string }[] = await this.databaseService
-      .query(
-        `select cuser from (
+    const cookies: { cuser: string }[] = await this.databaseService.query(
+      `select cuser from (
           select cuser,count(*) as c from cookie group by cuser order by updatedTime desc
-         ) a where a.c > 1`);
+         ) a where a.c > 1`,
+    );
 
-    const toRemoveCookies = await from(cookies).pipe(
-      concatMap(async cookie => {
-        const { cuser } = cookie;
+    const toRemoveCookies = await from(cookies)
+      .pipe(
+        concatMap(async cookie => {
+          const { cuser } = cookie;
 
-        const duplicatedCookies = await this.databaseService.fetchData({
-          type: Cookie,
-          filter: query => query
-            .where({ cuser })
-            .orderBy('Cookie.updatedTime', 'DESC')
-        });
-
-        if (duplicatedCookies.some(({ isUsed }) => isUsed)) {
-          duplicatedCookies.forEach(duplicatedCookie => {
-            duplicatedCookie.isUsed = true;
+          const duplicatedCookies = await this.databaseService.fetchData({
+            type: Cookie,
+            filter: query =>
+              query.where({ cuser }).orderBy('Cookie.updatedTime', 'DESC'),
           });
-        }
 
-        duplicatedCookies.shift();
+          if (duplicatedCookies.some(({ isUsed }) => isUsed)) {
+            duplicatedCookies.forEach(duplicatedCookie => {
+              duplicatedCookie.isUsed = true;
+            });
+          }
 
-        return duplicatedCookies;
-      }),
-      switchMap(cookies => { return cookies.flat(); }),
-      toArray())
+          duplicatedCookies.shift();
+
+          return duplicatedCookies;
+        }),
+        switchMap(cookies => {
+          return cookies.flat();
+        }),
+        toArray(),
+      )
       .toPromise();
 
     await Cookie.remove(toRemoveCookies);

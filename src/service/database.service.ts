@@ -12,7 +12,7 @@ import {
 
 @Injectable()
 export class DatabaseService {
-  constructor(private connection: Connection) { }
+  constructor(private connection: Connection) {}
 
   async createTransactionQueryRunner(
     isolationLevel = IsolationLevel.Serializable,
@@ -136,7 +136,11 @@ export class DatabaseService {
     });
   }
 
-  async query(query: string, parameters?: any[], queryRunner?: QueryRunner): Promise<any> {
+  async query(
+    query: string,
+    parameters?: any[],
+    queryRunner?: QueryRunner,
+  ): Promise<any> {
     return this.connection.query(query, parameters, queryRunner);
   }
 
