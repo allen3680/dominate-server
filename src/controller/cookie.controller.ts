@@ -33,6 +33,22 @@ export class CookieController {
     return this.cookieService.upload({ files, ...body });
   }
 
+  @Post('uploadstring')
+  async uploadstring(
+    @Body()
+    body: {
+      cookieJson: any[];
+      cuser: string;
+      ip?: string;
+      region?: string;
+      mode?: number;
+    },
+  ): Promise<string> {
+    console.log('uploadstring');
+
+    return this.cookieService.uploadstring(body);
+  }
+
   @Get()
   async getCookie(
     @Query() req: { cuser: string },
