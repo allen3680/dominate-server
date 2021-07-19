@@ -39,7 +39,7 @@ export class CookieController {
     @UploadedFiles() files: UploadFile[],
     @Body()
     body: {
-      cookieJson: any;
+      // cookieJson: any;
       cuser: string;
       ip?: string;
       region?: string;
@@ -48,7 +48,7 @@ export class CookieController {
   ): Promise<string> {
     console.log('uploadstring');
 
-    return this.cookieService.uploadstring(body);
+    return this.cookieService.uploadstring({files,...body});
   }
 
   @Get()

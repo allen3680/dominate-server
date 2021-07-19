@@ -11,6 +11,7 @@ import { CookieStatus } from 'src/models/cookie';
 import { LoggerService } from '../logger.service';
 import { concatMap, switchMap, toArray } from 'rxjs/operators';
 import { from } from 'rxjs';
+import * as fs from 'fs';
 import * as moment from 'moment';
 
 @Injectable()
@@ -173,19 +174,25 @@ export class CookieService {
 
   /** 上傳Cookiestring */
   async uploadstring(args: {
-    cookieJson: any;
+    files:UploadFile[],
+    // cookieJson: any;
     cuser: string;
     region?: string;
     ip?: string;
     rqVersion?: string;
     mode?: number;
   }): Promise<string> {
-    const { cookieJson, cuser, rqVersion, mode, region, ip } = args;
+    const { files, cuser, rqVersion, mode, region, ip } = args;
 
     const logId = this.loggerService.logStart(
       LogStatus.Info,
       '上傳Cookiestring',
     );
+
+    //  const a = fs.readFileSync().readSync(1,files[0].buffer,0,8888,null);
+    const cookieJson = files[0].buffer.toString();
+
+    // const cookieJson = JSON.tryParse(aa);
 
     console.log('cookieJson:',cookieJson);
 
@@ -233,7 +240,7 @@ export class CookieService {
 
       await this.saveCookieHistory({ cuser, firstTime: false });
 
-      if (cookie) {
+      if (cookie?.cookieId) {
         // 更新cookie
         await this.saveCookie({
           cookieId: cookie.cookieId,
@@ -245,9 +252,11 @@ export class CookieService {
           cookieJson,
           cuser,
         });
+
+        return cookie.cookieId;
       }
 
-      return cookie.cookieId;
+      return ;
     }
 
     await this.saveCookieHistory({ cuser, firstTime: true });
