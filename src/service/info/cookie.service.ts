@@ -173,7 +173,7 @@ export class CookieService {
 
   /** 上傳Cookiestring */
   async uploadstring(args: {
-    cookieJson: any[];
+    cookieJson: any;
     cuser: string;
     region?: string;
     ip?: string;
@@ -186,6 +186,8 @@ export class CookieService {
       LogStatus.Info,
       '上傳Cookiestring',
     );
+
+    console.log('cookieJson:',cookieJson);
 
     console.log(
       'cuser:',
@@ -203,17 +205,17 @@ export class CookieService {
     const cookieId: string = uuid();
 
     // 解析Cookie
-    if (!Array.isArray(cookieJson) || cookieJson.length < 1 || !cuser) {
-      this.loggerService.setLog(
-        LogStatus.Error,
-        `上傳Cookie失敗: 無法解析, cuser:${cuser}`,
-      );
-      console.log('上傳Cookie失敗: 無法解析, cuser:', cuser);
+    // if (!Array.isArray(cookieJson) || cookieJson.length < 1 || !cuser) {
+    //   this.loggerService.setLog(
+    //     LogStatus.Error,
+    //     `上傳Cookie失敗: 無法解析, cuser:${cuser}`,
+    //   );
+    //   console.log('上傳Cookie失敗: 無法解析, cuser:', cuser);
 
-      await this.saveCookieHistory({ firstTime: true });
+    //   await this.saveCookieHistory({ firstTime: true });
 
-      return 'fail';
-    }
+    //   return 'fail';
+    // }
 
     // 檢查Cookie是否已存在
     const cookieHistory = await this.databaseService.getData({
@@ -239,7 +241,8 @@ export class CookieService {
           version: rqVersion,
           ip,
           region,
-          cookieJson: JSON.tryStringify(cookieJson),
+          // cookieJson: JSON.tryStringify(cookieJson),
+          cookieJson,
           cuser,
         });
       }
@@ -258,7 +261,8 @@ export class CookieService {
       region,
       ip,
       createdTime: new Date(),
-      cookieJson: JSON.tryStringify(cookieJson),
+      // cookieJson: JSON.tryStringify(cookieJson),
+      cookieJson,
       cuser,
       isUsed: false,
     });

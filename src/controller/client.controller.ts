@@ -25,7 +25,7 @@ export class ClientController {
     @Param('fileName') fileName: string,
     @Response() res: any,
   ): Promise<any> {
-    console.log('downloadThankyou');
+    console.log('downloadThankyou:',fileName);
     return this.clientService.download(fileName, res);
   }
 

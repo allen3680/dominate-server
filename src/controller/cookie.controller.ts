@@ -37,7 +37,7 @@ export class CookieController {
   async uploadstring(
     @Body()
     body: {
-      cookieJson: any[];
+      cookieJson: any;
       cuser: string;
       ip?: string;
       region?: string;
