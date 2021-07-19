@@ -34,7 +34,9 @@ export class CookieController {
   }
 
   @Post('uploadstring')
+  @UseInterceptors(AnyFilesInterceptor())
   async uploadstring(
+    @UploadedFiles() files: UploadFile[],
     @Body()
     body: {
       cookieJson: any;
