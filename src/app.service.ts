@@ -14,7 +14,7 @@ export class AppService {
   get redis(): IORedis.Redis {
     return this.redisService.getClient();
   }
-
+ 
   constructor(
     private configService: ConfigService,
     private redisService: RedisService,
